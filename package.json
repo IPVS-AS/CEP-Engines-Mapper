@@ -1,0 +1,19 @@
+{
+  "name": "cepbenchmarking",
+  "version": "0.1.0",
+  "description": "Manager for benchmarking of CEP engines.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "cd src/ && node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://nahralo@gitlab-as.informatik.uni-stuttgart.de/hirmerpl/CEP_Benchmarking.git"
+  },
+  "author": "Leonardo Nahra",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ncp": "^2.0.0",
+    "rimraf": "^2.6.1"
+  }
+}
