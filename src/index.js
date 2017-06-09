@@ -1,12 +1,21 @@
+var WebSocket = require('ws');
 var rimraf = require('rimraf');
 var Vagrant = require('./vagrant');
 
-var machine = new Vagrant('./esperimage/');
+var wss = new WebSocket.Server({port:8080});
+var machine = null;
 
-machine.up((err) => {
-  if (err) {
+wss.on('listening', () => {
+  console.log('[WebSocketServer] Started listening on port 8080');
+
+  machine = new Vagrant('./esperimage/');
+  machine.up((err) => {
     console.log(err);
-  }
+  });
+});
+
+wss.on('connection', (ws) => {
+  console.log('[WebSocketServer] WebSocket connected to server');
 });
 
 process.stdin.resume();
@@ -14,21 +23,35 @@ process.stdin.resume();
 function cleanup() {
   console.log('Cleaning up before exit...');
 
-  machine.killChildProcess();
-  machine.destroy((err) => {
-    if (err) {
-      console.log(err);
-    }
+  if (wss) {
+    wss.close();
+  }
 
-    rimraf(machine.machineFolder, (err) => {
+  if (machine) {
+    console.log('Cleaning machine');
+    machine.killChildProcess((err) => {
       if (err) {
-        console.log(err);
+        throw err;
       }
+      console.log('Killed child process');
 
-      console.log('Clean up successful!');
-      process.exit();
+      machine.destroy((err) => {
+        if (err) {
+          throw err;
+        }
+        console.log('Machine Destroyed');
+
+        rimraf(machine.machineFolder, (err) => {
+          if (err) {
+            throw err;
+          }
+
+          console.log('Clean up successful!');
+          process.exit();
+        });
+      });
     });
-  });
+  }
 }
 
 process.on('SIGINT', cleanup);

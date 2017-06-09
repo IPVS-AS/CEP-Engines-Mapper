@@ -34,8 +34,9 @@ Vagrant.prototype.up = function(callback) {
     });
 
     self.childProcess.on('exit', (code, signal) => {
+      console.log('Child process ended');
       self.childProcess = null;
-      return callback(code + ':' + signal);
+      return callback(null);
     });
   });
 };
@@ -66,10 +67,20 @@ Vagrant.prototype.destroy = function(callback) {
   });
 }
 
-Vagrant.prototype.killChildProcess = function() {
+Vagrant.prototype.killChildProcess = function(callback) {
+  var self = this;
   if (this.childProcess) {
-    this.childProcess.kill('SIGKILL');
-    this.childProcess = null;
+    console.log('Remove listener child process');
+    this.childProcess.removeAllListeners('exit');
+    console.log('Removed listener');
+    self.childProcess.on('exit', (code, signal) => {
+      console.log('Child process exited');
+      self.childProcess = null;
+      return callback(null);
+    });
+    self.childProcess.kill();
+  } else {
+    return callback(null);
   }
 }
 
