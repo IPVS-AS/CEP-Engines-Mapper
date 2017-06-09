@@ -14,5 +14,13 @@ public class App {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        TemperatureEventGenerator temperatureGenerator = new TemperatureEventGenerator(
+            new TemperatureEventGenerator.EventHandler() {
+                public void handleEvent(TemperatureEvent temperatureEvent) {
+                    System.out.println(temperatureEvent.toString());
+                }
+            });
+        temperatureGenerator.start(10);
     }
 }
