@@ -19,6 +19,11 @@
       <artifactId>Java-WebSocket</artifactId>
       <version>1.3.4</version>
     </dependency>
+    <dependency>
+      <groupId>com.espertech</groupId>
+      <artifactId>esper</artifactId>
+      <version>6.0.1</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
