@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
-import com.espertech.esper.client.Configuration;
 import com.espertech.esper.client.EPServiceProvider;
 import com.espertech.esper.client.EPServiceProviderManager;
 import com.espertech.esper.client.EPStatement;
@@ -15,14 +14,16 @@ public class App {
     private static String exitMessage = "";
 
     public static void main(String[] args) {
+        String vagrantHostIp = Configuration.INSTANCE.getVagrantHostIp();
+
         try {
-            WebSocket webSocket = new WebSocket(new URI("ws://10.0.2.2:8080"));
+            WebSocket webSocket = new WebSocket(new URI("ws://" + vagrantHostIp + ":8080"));
             webSocket.connect();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        Configuration config = new Configuration();
+        com.espertech.esper.client.Configuration config = new com.espertech.esper.client.Configuration();
         config.addEventTypeAutoName("com.ipvs.cepbenchmarking");
         final EPServiceProvider serviceProvider = EPServiceProviderManager.getDefaultProvider(config);
 
