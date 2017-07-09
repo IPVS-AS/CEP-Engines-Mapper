@@ -1,6 +1,7 @@
 var WebSocket = require('ws');
 var rimraf = require('rimraf');
 var Vagrant = require('./vagrant');
+var temperature = require('./temperature');
 
 var wss = new WebSocket.Server({port:8080});
 var machine = null;
@@ -51,6 +52,8 @@ function cleanup() {
         });
       });
     });
+  } else {
+    process.exit();
   }
 }
 
