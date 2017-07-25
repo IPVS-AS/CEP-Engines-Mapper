@@ -5,8 +5,11 @@ function start(publishCount) {
 
   client.on('connect', () => {
     setIntervalN(() => {
-      var temperature = randomInt(0, 500);
-      client.publish('temperature', temperature.toString());
+      var temperatureEvent = {
+        temperature: randomInt(0, 500).toString()
+      };
+      console.log("Publish temperature: " + temperatureEvent.temperature);
+      client.publish('TemperatureEvent', JSON.stringify(temperatureEvent));
     }, 500, publishCount, () => {
       client.end();
     });
@@ -19,7 +22,7 @@ function setIntervalN(callback, delay, repetitions, end) {
     callback();
 
     if (++i === repetitions) {
-      clearInterval(intervalID);
+      clearInterval(intervalId);
       end();
     }
   }, delay);

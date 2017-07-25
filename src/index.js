@@ -2,6 +2,7 @@ var WebSocket = require('ws');
 var rimraf = require('rimraf');
 var Vagrant = require('./vagrant');
 var temperature = require('./temperature');
+var message = require('./message');
 
 var wss = new WebSocket.Server({port:8080});
 var machine = null;
@@ -17,6 +18,20 @@ wss.on('listening', () => {
 
 wss.on('connection', (ws) => {
   console.log('[WebSocketServer] WebSocket connected to server');
+
+  ws.on('message', (data) => {
+    console.log('[WebSocket] WebSocket received message');
+    console.log(data);
+
+    var incomingMessage = message.Message.fromJson(data);
+    switch (incomingMessage.header.type) {
+      case message.Constants.CepEngineReady:
+        temperature.start(50);
+        break;
+    }
+  });
+
+  ws.send(new message.SetupCepEngineMessage().toJson());
 });
 
 process.stdin.resume();

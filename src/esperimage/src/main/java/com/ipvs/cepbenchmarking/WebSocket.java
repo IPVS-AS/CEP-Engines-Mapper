@@ -10,6 +10,8 @@ import org.java_websocket.handshake.ServerHandshake;
 
 public class WebSocket extends WebSocketClient {
 
+    private MessageHandler messageHandler;
+
     public WebSocket(URI serverURI) {
         super(serverURI, new Draft_6455());
     }
@@ -26,12 +28,16 @@ public class WebSocket extends WebSocketClient {
 
     @Override
     public void onMessage(String message) {
-        System.out.println("received message: " + message);
+        messageHandler.handleMessage(message);
     }
 
     @Override
     public void onError(Exception exception) {
         System.err.println("an error occurred:" + exception);
+    }
+
+    public void setMessageHandler(MessageHandler messageHandler) {
+        this.messageHandler = messageHandler;
     }
 
     public interface MessageHandler {

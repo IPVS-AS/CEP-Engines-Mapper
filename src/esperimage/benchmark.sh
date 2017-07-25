@@ -1,5 +1,5 @@
 #!/bin/bash -e
 
 cd /vagrant
-mvn package
-mvn exec:java &
+mvn clean package
+mvn exec:java
