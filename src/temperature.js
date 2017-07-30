@@ -6,7 +6,7 @@ function start(publishCount) {
   client.on('connect', () => {
     setIntervalN(() => {
       var temperatureEvent = {
-        temperature: randomInt(0, 500).toString()
+        temperature: randomInt(0, 500)
       };
       console.log("Publish temperature: " + temperatureEvent.temperature);
       client.publish('TemperatureEvent', JSON.stringify(temperatureEvent));

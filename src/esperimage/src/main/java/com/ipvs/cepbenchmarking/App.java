@@ -107,14 +107,14 @@ public class App {
                         Map<String, String> properties = inputs.get(topic);
 
                         if (properties != null) {
-                            Map<String, String> event = new HashMap<>();
+                            Map<String, Object> event = new HashMap<>();
 
                             JSONParser jsonParser = new JSONParser();
                             try {
                                 JSONObject jsonObject = (JSONObject) jsonParser.parse(message.toString());
 
                                 for (String property : properties.keySet()) {
-                                    String value = (String) jsonObject.get(property);
+                                    Object value = jsonObject.get(property);
                                     if (value != null) {
                                         event.put(property, value);
                                     }

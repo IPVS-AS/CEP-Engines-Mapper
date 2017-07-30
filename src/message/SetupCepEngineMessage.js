@@ -13,15 +13,15 @@ class SetupCepEngineMessage extends Message {
         properties: [
         {
           property: "temperature",
-          type: "string"
+          type: "int"
         }
         ]
       }
       ],
       outputs: [
       {
-        statement: 'select avg(cast(temperature as int)) from TemperatureEvent.win:time_batch(5 sec)',
-        select: 'avg(cast(temperature as int))'
+        statement: 'select avg(temperature) from TemperatureEvent.win:time_batch(5 sec)',
+        select: 'avg(temperature)'
       }
       ]
     };
