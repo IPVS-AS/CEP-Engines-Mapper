@@ -1,5 +1,7 @@
 var WebSocket = require('ws');
 var rimraf = require('rimraf');
+var node_ssh = require('node-ssh');
+var ssh = new node_ssh();
 var Vagrant = require('./vagrant');
 var temperature = require('./temperature');
 var message = require('./message');
@@ -16,18 +18,38 @@ wss.on('listening', () => {
   });
 });
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
   console.log('[WebSocketServer] WebSocket connected to server');
+  console.log(req.connection.remoteAddress);
+  var remoteAddress = req.connection.remoteAddress;
 
   ws.on('message', (data) => {
     console.log('[WebSocket] WebSocket received message');
     console.log(data);
 
-    var incomingMessage = message.Message.fromJson(data);
-    switch (incomingMessage.header.type) {
-      case message.Constants.CepEngineReady:
-        temperature.start(50);
-        break;
+    try {
+      var incomingMessage = message.Message.fromJson(data);
+      switch (incomingMessage.header.type) {
+        case message.Constants.CepEngineReady:
+          temperature.start(50, () => {
+            ws.send(new message.BenchmarkEndMessage().toJson());
+
+            ssh.connect({
+              host: remoteAddress,
+              username: 'ubuntu',
+              privateKey: '/vagrant/id_rsa'
+            }).then(() => {
+              ssh.getFile('./benchmark.log', '/home/ubuntu/benchmark.log').then((contents) => {
+                console.log('log downloaded');
+              }, (err) => {
+                console.log('log error');
+              });
+            });
+          });
+          break;
+      }
+    } catch (err) {
+      console.log(err);
     }
   });
 
@@ -73,4 +95,4 @@ function cleanup() {
 }
 
 process.on('SIGINT', cleanup);
-process.on('uncaughtException', cleanup);
+//process.on('uncaughtException', cleanup);

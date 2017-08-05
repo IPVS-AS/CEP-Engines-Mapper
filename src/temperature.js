@@ -1,6 +1,6 @@
 var mqtt = require('mqtt');
 
-function start(publishCount) {
+function start(publishCount, callback) {
   var client = mqtt.connect('mqtt://test.mosquitto.org');
 
   client.on('connect', () => {
@@ -12,6 +12,9 @@ function start(publishCount) {
       client.publish('TemperatureEvent', JSON.stringify(temperatureEvent));
     }, 500, publishCount, () => {
       client.end();
+      if (callback) {
+        callback();
+      }
     });
   });
 }

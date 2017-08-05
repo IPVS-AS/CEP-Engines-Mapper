@@ -7,4 +7,5 @@ public final class Constants {
 
     public static final String SetupCepEngine = "SetupCepEngine";
     public static final String CepEngineReady = "CepEngineReady";
+    public static final String BenchmarkEnd = "BenchmarkEnd";
 }

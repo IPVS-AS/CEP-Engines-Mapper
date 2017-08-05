@@ -2,4 +2,4 @@
 
 cd /vagrant
 mvn clean package
-mvn exec:java
+mvn exec:java &

@@ -7,6 +7,9 @@ import java.net.URI;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
 
 import com.espertech.esper.client.EPServiceProvider;
 import com.espertech.esper.client.EPServiceProviderManager;
@@ -32,11 +35,17 @@ import org.json.simple.parser.ParseException;
 
 public class App {
 
+    private static final Logger LOGGER = Logger.getLogger(App.class.getName());
+
     public static void main(String[] args) throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         String vagrantHostIp = Configuration.INSTANCE.getVagrantHostIp();
 
         try {
+            FileHandler fileHandler = new FileHandler("%h/benchmark.log");
+            fileHandler.setFormatter(new SimpleFormatter());
+            LOGGER.addHandler(fileHandler);
+
             final WebSocket webSocket = new WebSocket(new URI("ws://" + vagrantHostIp + ":8080"));
 
             webSocket.setMessageHandler(new WebSocket.MessageHandler() {
@@ -51,6 +60,10 @@ public class App {
                             case Constants.SetupCepEngine:
                                 setupCepEngine(new SetupCepEngineMessage(message));
                                 webSocket.send(new CepEngineReadyMessage().toString());
+                                break;
+                            case Constants.BenchmarkEnd:
+                                System.out.println("BENCHMARK END");
+                                // Wrap things up and send log to host
                                 break;
                         }
                     } catch (ParseException e) {
@@ -85,7 +98,7 @@ public class App {
             statement.addListener(new UpdateListener() {
                 public void update(EventBean[] newEvents, EventBean[] oldEvents) {
                     EventBean event = newEvents[0];
-                    System.out.println(((Map) event.getUnderlying()).toString());
+                    LOGGER.info(((Map) event.getUnderlying()).toString());
                 }
             });
         }
