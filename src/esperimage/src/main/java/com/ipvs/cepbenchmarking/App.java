@@ -75,14 +75,14 @@ public class App {
     }
 
     private void setupCepEngine(SetupCepEngineMessage message) {
-        for (Map.Entry<String, Map<String, String>> input : message.getInputs().entrySet()) {
-            System.out.println("[Esper] Add event type: " + input.getKey());
-            Esper.INSTANCE.addEventType(input.getKey(), (Map)input.getValue());
+        for (Map.Entry<String, Map<String, String>> event : message.getEvents().entrySet()) {
+            System.out.println("[Esper] Add event type: " + event.getKey());
+            Esper.INSTANCE.addEventType(event.getKey(), (Map)event.getValue());
         }
 
-        for (Map.Entry<String, String> output : message.getOutputs().entrySet()) {
-            System.out.println("[Esper] Add query:\n" + output.getKey());
-            Esper.INSTANCE.addStatement(output.getValue(), output.getKey());
+        for (Map.Entry<String, String> statement : message.getStatements().entrySet()) {
+            System.out.println("[Esper] Add query:\n" + statement.getValue());
+            Esper.INSTANCE.addStatement(statement.getKey(), statement.getValue());
         }
 
         MemoryPersistence memoryPersistence = new MemoryPersistence();
@@ -93,13 +93,13 @@ public class App {
             connectOptions.setCleanSession(true);
             mqttClient.connect(connectOptions);
 
-            final Map<String, Map<String, String>> inputs = message.getInputs();
-            for (String topic : inputs.keySet()) {
-                mqttClient.subscribe(topic, new IMqttMessageListener() {
+            final Map<String, Map<String, String>> events = message.getEvents();
+            for (String eventName : events.keySet()) {
+                mqttClient.subscribe(eventName, new IMqttMessageListener() {
                     public void messageArrived(String topic, MqttMessage message) {
                         System.out.println(message.toString());
 
-                        Map<String, String> properties = inputs.get(topic);
+                        Map<String, String> properties = events.get(topic);
 
                         if (properties != null) {
                             Map<String, Object> event = new HashMap<>();

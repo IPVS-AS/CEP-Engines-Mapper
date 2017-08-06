@@ -7,9 +7,9 @@ class SetupCepEngineMessage extends Message {
 
     this.payload = {
       broker: 'tcp://10.0.14.106:1883',
-      inputs: [
+      events: [
       {
-        topic: 'TemperatureEvent',
+        eventName: 'TemperatureEvent',
         properties: [
         {
           property: "temperature",
@@ -18,10 +18,10 @@ class SetupCepEngineMessage extends Message {
         ]
       }
       ],
-      outputs: [
+      statements: [
       {
-        statement: 'select avg(temperature) from TemperatureEvent.win:time_batch(5 sec)',
-        select: 'AverageTemperature'
+        statementName: 'AverageTemperature',
+        statement: 'select avg(temperature) from TemperatureEvent.win:time_batch(5 sec)'
       }
       ]
     };

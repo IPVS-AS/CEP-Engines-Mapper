@@ -11,18 +11,18 @@ import org.json.simple.parser.ParseException;
 
 public class SetupCepEngineMessage extends Message {
     private String broker;
-    private Map<String, Map<String, String>> inputs;
-    private Map<String, String> outputs;
+    private Map<String, Map<String, String>> events;
+    private Map<String, String> statements;
 
     public SetupCepEngineMessage(String message) throws ParseException {
         super(message);
 
         broker = (String) this.payload.get("broker");
 
-        JSONArray jsonArray = (JSONArray) this.payload.get("inputs");
-        inputs = new HashMap<String, Map<String, String>>();
+        JSONArray jsonArray = (JSONArray) this.payload.get("events");
+        events = new HashMap<String, Map<String, String>>();
         for (Object input : jsonArray) {
-            String eventName = (String) ((JSONObject) input).get("topic");
+            String eventName = (String) ((JSONObject) input).get("eventName");
 
             Map<String, String> properties = new HashMap<String,String>();
             for (Object property : (JSONArray) ((JSONObject) input).get("properties")) {
@@ -31,15 +31,15 @@ public class SetupCepEngineMessage extends Message {
                 properties.put(propertyName, propertyType);
             }
 
-            inputs.put(eventName, properties);
+            events.put(eventName, properties);
         }
 
-        jsonArray = (JSONArray) this.payload.get("outputs");
-        outputs = new HashMap<String, String>();
+        jsonArray = (JSONArray) this.payload.get("statements");
+        statements = new HashMap<String, String>();
         for (Object output : jsonArray) {
+            String statementName = (String) ((JSONObject) output).get("statementName");
             String statement = (String) ((JSONObject) output).get("statement");
-            String select = (String) ((JSONObject) output).get("select");
-            outputs.put(statement, select);
+            statements.put(statementName, statement);
         }
     }
 
@@ -47,11 +47,11 @@ public class SetupCepEngineMessage extends Message {
         return broker;
     }
 
-    public Map<String, Map<String, String>> getInputs() {
-        return inputs;
+    public Map<String, Map<String, String>> getEvents() {
+        return events;
     }
 
-    public Map<String, String> getOutputs() {
-        return outputs;
+    public Map<String, String> getStatements() {
+        return statements;
     }
 }
