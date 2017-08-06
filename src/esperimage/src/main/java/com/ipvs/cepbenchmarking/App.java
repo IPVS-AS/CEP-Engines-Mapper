@@ -8,14 +8,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
-import java.util.logging.FileHandler;
-import java.util.logging.SimpleFormatter;
-
-import com.espertech.esper.client.EPServiceProvider;
-import com.espertech.esper.client.EPServiceProviderManager;
-import com.espertech.esper.client.EPStatement;
-import com.espertech.esper.client.UpdateListener;
-import com.espertech.esper.client.EventBean;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -23,6 +15,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
+import com.ipvs.cepbenchmarking.engine.Esper;
 
 import com.ipvs.cepbenchmarking.message.Message;
 import com.ipvs.cepbenchmarking.message.SetupCepEngineMessage;
@@ -34,18 +28,16 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class App {
-
     private static final Logger LOGGER = Logger.getLogger(App.class.getName());
 
-    public static void main(String[] args) throws InterruptedException {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+    private final CountDownLatch countDownLatch;
+
+    public App() {
+        countDownLatch = new CountDownLatch(1);
+
         String vagrantHostIp = Configuration.INSTANCE.getVagrantHostIp();
 
         try {
-            FileHandler fileHandler = new FileHandler("%h/benchmark.log");
-            fileHandler.setFormatter(new SimpleFormatter());
-            LOGGER.addHandler(fileHandler);
-
             final WebSocket webSocket = new WebSocket(new URI("ws://" + vagrantHostIp + ":8080"));
 
             webSocket.setMessageHandler(new WebSocket.MessageHandler() {
@@ -76,31 +68,21 @@ public class App {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
+    public void run() throws InterruptedException {
         countDownLatch.await();
     }
 
-    private static void setupCepEngine(SetupCepEngineMessage message) {
-        com.espertech.esper.client.Configuration config = new com.espertech.esper.client.Configuration();
-
+    private void setupCepEngine(SetupCepEngineMessage message) {
         for (Map.Entry<String, Map<String, String>> input : message.getInputs().entrySet()) {
             System.out.println("[Esper] Add event type: " + input.getKey());
-            config.addEventType(input.getKey(), (Map)input.getValue());
+            Esper.INSTANCE.addEventType(input.getKey(), (Map)input.getValue());
         }
-
-        final EPServiceProvider serviceProvider = EPServiceProviderManager.getDefaultProvider(config);
 
         for (Map.Entry<String, String> output : message.getOutputs().entrySet()) {
             System.out.println("[Esper] Add query:\n" + output.getKey());
-            EPStatement statement = serviceProvider.getEPAdministrator().createEPL(output.getKey());
-
-            final String select = output.getValue();
-            statement.addListener(new UpdateListener() {
-                public void update(EventBean[] newEvents, EventBean[] oldEvents) {
-                    EventBean event = newEvents[0];
-                    LOGGER.info(((Map) event.getUnderlying()).toString());
-                }
-            });
+            Esper.INSTANCE.addStatement(output.getValue(), output.getKey());
         }
 
         MemoryPersistence memoryPersistence = new MemoryPersistence();
@@ -134,7 +116,7 @@ public class App {
                                 }
 
                                 System.out.println("[Esper] Send event " + topic + ": " + event.toString());
-                                serviceProvider.getEPRuntime().sendEvent(event, topic);
+                                Esper.INSTANCE.sendEvent(topic, event);
                             } catch (ParseException e) {
                                 System.out.println(e.toString());
                                 e.printStackTrace();
@@ -148,5 +130,10 @@ public class App {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        App app = new App();
+        app.run();
     }
 }

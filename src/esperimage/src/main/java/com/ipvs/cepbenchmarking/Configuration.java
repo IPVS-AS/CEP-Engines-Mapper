@@ -1,5 +1,6 @@
 package com.ipvs.cepbenchmarking;
 
+import java.util.logging.LogManager;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -17,6 +18,8 @@ public enum Configuration {
         JSONParser jsonParser = new JSONParser();
 
         try {
+            LogManager.getLogManager().readConfiguration(Thread.currentThread().getContextClassLoader().getResourceAsStream("logging.properties"));
+
             System.out.println("Loading configuration...");
 
             JSONObject jsonObject = (JSONObject) jsonParser.parse(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("config.json")));

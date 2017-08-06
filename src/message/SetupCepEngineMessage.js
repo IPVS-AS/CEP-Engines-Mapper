@@ -6,7 +6,7 @@ class SetupCepEngineMessage extends Message {
     super(Constants.SetupCepEngine);
 
     this.payload = {
-      broker: 'tcp://test.mosquitto.org:1883',
+      broker: 'tcp://10.0.14.106:1883',
       inputs: [
       {
         topic: 'TemperatureEvent',
@@ -21,7 +21,7 @@ class SetupCepEngineMessage extends Message {
       outputs: [
       {
         statement: 'select avg(temperature) from TemperatureEvent.win:time_batch(5 sec)',
-        select: 'avg(temperature)'
+        select: 'AverageTemperature'
       }
       ]
     };

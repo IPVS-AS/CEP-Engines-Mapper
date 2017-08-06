@@ -1,7 +1,8 @@
 var mqtt = require('mqtt');
 
 function start(publishCount, callback) {
-  var client = mqtt.connect('mqtt://test.mosquitto.org');
+  console.log("Connect mqtt");
+  var client = mqtt.connect('tcp://10.0.14.106:1883');
 
   client.on('connect', () => {
     setIntervalN(() => {
