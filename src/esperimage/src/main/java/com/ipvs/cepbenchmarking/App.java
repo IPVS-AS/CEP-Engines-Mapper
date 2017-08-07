@@ -4,17 +4,15 @@ import java.lang.Exception;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.json.simple.parser.ParseException;
+
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import com.ipvs.cepbenchmarking.engine.Esper;
 
@@ -23,14 +21,11 @@ import com.ipvs.cepbenchmarking.message.SetupCepEngineMessage;
 import com.ipvs.cepbenchmarking.message.CepEngineReadyMessage;
 import com.ipvs.cepbenchmarking.message.Constants;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 public class App {
     private static final Logger LOGGER = Logger.getLogger(App.class.getName());
 
     private final CountDownLatch countDownLatch;
+    private Mqtt mqttClient;
 
     public App() {
         countDownLatch = new CountDownLatch(1);
@@ -85,50 +80,22 @@ public class App {
             Esper.INSTANCE.addStatement(statement.getKey(), statement.getValue());
         }
 
-        MemoryPersistence memoryPersistence = new MemoryPersistence();
-
         try {
-            MqttClient mqttClient = new MqttClient(message.getBroker(), "Esper", memoryPersistence);
-            MqttConnectOptions connectOptions = new MqttConnectOptions();
-            connectOptions.setCleanSession(true);
-            mqttClient.connect(connectOptions);
+            mqttClient = new Mqtt(message.getBroker());
+            mqttClient.setEventHandler(new Mqtt.EventHandler() {
+                public void handleEvent(String eventName, Map<String, Object> event) {
+                    Esper.INSTANCE.sendEvent(eventName, event);
+                }
+            });
 
-            final Map<String, Map<String, String>> events = message.getEvents();
-            for (String eventName : events.keySet()) {
-                mqttClient.subscribe(eventName, new IMqttMessageListener() {
-                    public void messageArrived(String topic, MqttMessage message) {
-                        System.out.println(message.toString());
-
-                        Map<String, String> properties = events.get(topic);
-
-                        if (properties != null) {
-                            Map<String, Object> event = new HashMap<>();
-
-                            JSONParser jsonParser = new JSONParser();
-                            try {
-                                JSONObject jsonObject = (JSONObject) jsonParser.parse(message.toString());
-
-                                for (String property : properties.keySet()) {
-                                    Object value = jsonObject.get(property);
-                                    if (value != null) {
-                                        event.put(property, value);
-                                    }
-                                }
-
-                                System.out.println("[Esper] Send event " + topic + ": " + event.toString());
-                                Esper.INSTANCE.sendEvent(topic, event);
-                            } catch (ParseException e) {
-                                System.out.println(e.toString());
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                });
+            mqttClient.connect();
+            for (Map.Entry<String, Map<String, String>> event : message.getEvents().entrySet()) {
+                Set<String> properties = event.getValue().keySet();
+                mqttClient.subscribe(event.getKey(), properties.toArray(new String[properties.size()]));
             }
         } catch (MqttException e) {
             e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
+            // TODO Log excepetion
         }
     }
 
