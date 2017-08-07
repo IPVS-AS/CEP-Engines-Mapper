@@ -12,8 +12,8 @@ public class WebSocket extends WebSocketClient {
 
     private MessageHandler messageHandler;
 
-    public WebSocket(URI serverURI) {
-        super(serverURI, new Draft_6455());
+    public WebSocket(String serverUri) throws URISyntaxException {
+        super(new URI(serverUri), new Draft_6455());
     }
 
     @Override

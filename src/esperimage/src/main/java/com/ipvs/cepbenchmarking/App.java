@@ -3,7 +3,6 @@ package com.ipvs.cepbenchmarking;
 import java.lang.Exception;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ public class App {
         String vagrantHostIp = Configuration.INSTANCE.getVagrantHostIp();
 
         try {
-            final WebSocket webSocket = new WebSocket(new URI("ws://" + vagrantHostIp + ":8080"));
+            final WebSocket webSocket = new WebSocket("ws://" + vagrantHostIp + ":8080");
 
             webSocket.setMessageHandler(new WebSocket.MessageHandler() {
                 public void handleMessage(String message) {
