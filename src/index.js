@@ -1,8 +1,8 @@
+var fs = require('fs');
 var WebSocket = require('ws');
-var rimraf = require('rimraf');
 var node_ssh = require('node-ssh');
 var ssh = new node_ssh();
-var Vagrant = require('./vagrant');
+var vagrant = require('node-vagrant');
 var temperature = require('./temperature');
 var message = require('./message');
 
@@ -12,9 +12,29 @@ var machine = null;
 wss.on('listening', () => {
   console.log('[WebSocketServer] Started listening on port 8080');
 
-  machine = new Vagrant('./esperimage/');
-  machine.up((err) => {
-    console.log(err);
+  machine = new vagrant.create({cwd: "./esperimage/"});
+
+  var Vagrantfile = JSON.parse(fs.readFileSync('./esperimage/Vagrantfile.json', 'utf8'));
+  machine.init(null, Vagrantfile, (err, out) => {
+    if (err) {
+      throw new Error(err);
+    }
+
+    machine.on('progress', (...args) => {
+      console.log('download progress: ', [].slice.call(args));
+    });
+
+    machine.on('up-progress', (...args) => {
+      console.log('up progress: ', [].slice.call(args));
+    });
+
+    machine.up((err, out) => {
+      if (err) {
+        throw new Error(err);
+      }
+
+      console.log(out);
+    });
   });
 });
 
@@ -66,31 +86,10 @@ function cleanup() {
   }
 
   if (machine) {
-    console.log('Cleaning machine');
-    machine.killChildProcess((err) => {
-      if (err) {
-        throw err;
-      }
-      console.log('Killed child process');
-
-      machine.destroy((err) => {
-        if (err) {
-          throw err;
-        }
-        console.log('Machine Destroyed');
-
-        rimraf(machine.machineFolder, (err) => {
-          if (err) {
-            throw err;
-          }
-
-          console.log('Clean up successful!');
-          process.exit();
-        });
-      });
+    machine.destroy((err, out) => {
+      console.log(err, out);
+      process.exit();
     });
-  } else {
-    process.exit();
   }
 }
 

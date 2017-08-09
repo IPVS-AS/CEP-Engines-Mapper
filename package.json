@@ -14,9 +14,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "mqtt": "^2.9.1",
-    "ncp": "^2.0.0",
     "node-ssh": "^4.2.3",
-    "rimraf": "^2.6.1",
+    "node-vagrant": "lanahra/node-vagrant",
     "ws": "^3.0.0"
   }
 }
