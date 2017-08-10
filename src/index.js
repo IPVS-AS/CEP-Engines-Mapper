@@ -6,15 +6,17 @@ var vagrant = require('node-vagrant');
 var temperature = require('./temperature');
 var message = require('./message');
 
-var wss = new WebSocket.Server({port:8080});
+var wss = new WebSocket.Server({ port: 8080 });
 var machine = null;
 
 wss.on('listening', () => {
   console.log('[WebSocketServer] Started listening on port 8080');
 
-  machine = new vagrant.create({cwd: "./esperimage/"});
+  machine = new vagrant.create({ cwd: './esperimage/' });
 
-  var Vagrantfile = JSON.parse(fs.readFileSync('./esperimage/Vagrantfile.json', 'utf8'));
+  var Vagrantfile = JSON.parse(
+    fs.readFileSync('./esperimage/Vagrantfile.json', 'utf8')
+  );
   machine.init(null, Vagrantfile, (err, out) => {
     if (err) {
       throw new Error(err);
@@ -43,7 +45,7 @@ wss.on('connection', (ws, req) => {
   console.log(req.connection.remoteAddress);
   var remoteAddress = req.connection.remoteAddress;
 
-  ws.on('message', (data) => {
+  ws.on('message', data => {
     console.log('[WebSocket] WebSocket received message');
     console.log(data);
 
@@ -54,17 +56,24 @@ wss.on('connection', (ws, req) => {
           temperature.start(50, () => {
             ws.send(new message.BenchmarkEndMessage().toJson());
 
-            ssh.connect({
-              host: remoteAddress,
-              username: 'ubuntu',
-              privateKey: '/vagrant/id_rsa'
-            }).then(() => {
-              ssh.getFile('./benchmark.log', '/home/ubuntu/benchmark.log').then((contents) => {
-                console.log('log downloaded');
-              }, (err) => {
-                console.log('log error');
+            ssh
+              .connect({
+                host: remoteAddress,
+                username: 'ubuntu',
+                privateKey: '/vagrant/id_rsa'
+              })
+              .then(() => {
+                ssh
+                  .getFile('./benchmark.log', '/home/ubuntu/benchmark.log')
+                  .then(
+                    contents => {
+                      console.log('log downloaded');
+                    },
+                    err => {
+                      console.log('log error');
+                    }
+                  );
               });
-            });
           });
           break;
       }

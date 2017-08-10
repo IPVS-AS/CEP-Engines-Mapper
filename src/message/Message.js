@@ -1,7 +1,7 @@
 class Message {
   constructor(messageType) {
     this.header = {
-      version: "0.1.0",
+      version: '0.1.0',
       type: messageType
     };
     this.payload = null;

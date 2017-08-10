@@ -1,22 +1,27 @@
 var mqtt = require('mqtt');
 
 function start(publishCount, callback) {
-  console.log("Connect mqtt");
+  console.log('Connect mqtt');
   var client = mqtt.connect('tcp://10.0.14.106:1883');
 
   client.on('connect', () => {
-    setIntervalN(() => {
-      var temperatureEvent = {
-        temperature: randomInt(0, 500)
-      };
-      console.log("Publish temperature: " + temperatureEvent.temperature);
-      client.publish('TemperatureEvent', JSON.stringify(temperatureEvent));
-    }, 500, publishCount, () => {
-      client.end();
-      if (callback) {
-        callback();
+    setIntervalN(
+      () => {
+        var temperatureEvent = {
+          temperature: randomInt(0, 500)
+        };
+        console.log('Publish temperature: ' + temperatureEvent.temperature);
+        client.publish('TemperatureEvent', JSON.stringify(temperatureEvent));
+      },
+      500,
+      publishCount,
+      () => {
+        client.end();
+        if (callback) {
+          callback();
+        }
       }
-    });
+    );
   });
 }
 
@@ -32,7 +37,7 @@ function setIntervalN(callback, delay, repetitions, end) {
   }, delay);
 }
 
-function randomInt (low, high) {
+function randomInt(low, high) {
   return Math.floor(Math.random() * (high - low) + low);
 }
 
