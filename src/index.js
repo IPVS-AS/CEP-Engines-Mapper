@@ -22,12 +22,17 @@ wss.on('listening', () => {
       throw new Error(err);
     }
 
-    machine.on('progress', (...args) => {
-      console.log('download progress: ', [].slice.call(args));
+    machine.on('progress', out => {
+      console.log('download progress: ', out);
     });
 
-    machine.on('up-progress', (...args) => {
-      console.log('up progress: ', [].slice.call(args));
+    machine.on('up-progress', out => {
+      if (out != '\n') {
+        console.log(
+          'up progress: ',
+          out.replace(/^(==>\s|\s*)default:\s|\n/g, '')
+        );
+      }
     });
 
     machine.up((err, out) => {
