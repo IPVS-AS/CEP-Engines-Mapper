@@ -14,13 +14,12 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 
 public class Mqtt extends MqttClient {
-    private EventHandler eventHandler;
 
     public Mqtt(String brokerUri) throws MqttException {
         super(brokerUri, MqttClient.generateClientId());
     }
 
-    public void subscribe(final String eventName, final String[] eventProperties) {
+    public void subscribe(final String eventName, final String[] eventProperties, final EventHandler eventHandler) {
         try {
             super.subscribe(eventName, new IMqttMessageListener() {
                 public void messageArrived(String topic, MqttMessage message) {
@@ -48,10 +47,6 @@ public class Mqtt extends MqttClient {
             e.printStackTrace();
             // TODO Log exception
         }
-    }
-
-    public void setEventHandler(EventHandler eventHandler) {
-        this.eventHandler = eventHandler;
     }
 
     public interface EventHandler {

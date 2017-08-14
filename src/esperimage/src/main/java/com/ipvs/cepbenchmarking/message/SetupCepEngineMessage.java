@@ -11,6 +11,7 @@ import org.json.simple.parser.ParseException;
 
 public class SetupCepEngineMessage extends Message {
     private String broker;
+    private String endEventName;
     private Map<String, Map<String, String>> events;
     private Map<String, String> statements;
 
@@ -18,6 +19,7 @@ public class SetupCepEngineMessage extends Message {
         super(message);
 
         broker = (String) this.payload.get("broker");
+        endEventName = (String) this.payload.get("endEventName");
 
         JSONArray jsonArray = (JSONArray) this.payload.get("events");
         events = new HashMap<String, Map<String, String>>();
@@ -45,6 +47,10 @@ public class SetupCepEngineMessage extends Message {
 
     public String getBroker() {
         return broker;
+    }
+
+    public String getEndEventName() {
+        return endEventName;
     }
 
     public Map<String, Map<String, String>> getEvents() {

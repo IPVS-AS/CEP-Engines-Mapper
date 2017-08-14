@@ -1,6 +1,6 @@
 var mqtt = require('mqtt');
 
-function start(publishCount, callback) {
+function start(publishCount) {
   console.log('Connect mqtt');
   var client = mqtt.connect('tcp://10.0.14.106:1883');
 
@@ -16,10 +16,8 @@ function start(publishCount, callback) {
       500,
       publishCount,
       () => {
+        client.publish('TemperatureEndEvent', JSON.stringify({ end: true }));
         client.end();
-        if (callback) {
-          callback();
-        }
       }
     );
   });

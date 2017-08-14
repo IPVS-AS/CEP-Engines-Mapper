@@ -53,28 +53,26 @@ wss.on('connection', (ws, req) => {
       var incomingMessage = message.Message.fromJson(data);
       switch (incomingMessage.header.type) {
         case message.Constants.CepEngineReady:
-          temperature.start(50, () => {
-            ws.send(new message.BenchmarkEndMessage().toJson());
-
-            ssh
-              .connect({
-                host: remoteAddress,
-                username: 'ubuntu',
-                privateKey: '/vagrant/id_rsa'
-              })
-              .then(() => {
-                ssh
-                  .getFile('./benchmark.log', '/home/ubuntu/benchmark.log')
-                  .then(
-                    contents => {
-                      console.log('log downloaded');
-                    },
-                    err => {
-                      console.log('log error');
-                    }
-                  );
-              });
-          });
+          temperature.start(50);
+          break;
+        case message.Constants.BenchmarkEnd:
+          ssh
+            .connect({
+              host: remoteAddress,
+              username: 'ubuntu',
+              privateKey: '/vagrant/id_rsa'
+            })
+            .then(() => {
+              ssh.getFile('./benchmark.log', '/home/ubuntu/benchmark.log').then(
+                contents => {
+                  console.log('log downloaded');
+                  ws.send(new message.ShutdownMessage().toJson());
+                },
+                err => {
+                  console.log('log error');
+                }
+              );
+            });
           break;
       }
     } catch (err) {
