@@ -15,7 +15,7 @@
   "dependencies": {
     "mqtt": "^2.9.1",
     "node-ssh": "^4.2.3",
-    "node-vagrant": "lanahra/node-vagrant",
+    "node-vagrant": "^1.1.0",
     "ws": "^3.0.0"
   }
 }
