@@ -67,21 +67,43 @@ wss.on('connection', (ws, req) => {
               username: 'ubuntu',
               privateKey: '/vagrant/id_rsa'
             })
-            .then(() => {
-              ssh.getFile('./benchmark.log', '/home/ubuntu/benchmark.log').then(
-                contents => {
-                  console.log('log downloaded');
-                  ws.send(new message.ShutdownMessage().toJson());
-                },
-                err => {
-                  console.log('log error');
-                }
-              );
-            });
+            .then(
+              () => {
+                ssh
+                  .getFile('./benchmark.log', '/home/ubuntu/benchmark.log')
+                  .then(
+                    contents => {
+                      console.log('[WebSocket] Benchmark log get successful');
+                      ws.send(new message.ShutdownMessage().toJson());
+                    },
+                    err => {
+                      console.log(err);
+                    }
+                  );
+              },
+              err => {
+                console.log(err);
+              }
+            );
           break;
       }
     } catch (err) {
       console.log(err);
+    }
+  });
+
+  ws.on('close', (code, reason) => {
+    console.log('[WebSocket] Connection closed: ' + code + ' ' + reason);
+    console.log('[Vagrant] Destroy machine');
+    if (machine) {
+      machine.destroy((err, out) => {
+        if (err) {
+          throw new Error(err);
+        }
+
+        console.log(out);
+        machine = null;
+      });
     }
   });
 
@@ -102,6 +124,8 @@ function cleanup() {
       console.log(err, out);
       process.exit();
     });
+  } else {
+    process.exit();
   }
 }
 
