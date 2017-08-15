@@ -1,6 +1,5 @@
 Vagrant.configure("2") do |config|
   config.ssh.username = "ubuntu"
-  config.ssh.private_key_path = "~/.ssh/id_rsa"
 
   config.vm.provision :shell, path: "install_vagrant.sh"
   config.vm.provision :shell, path: "install_node.sh", privileged: false
@@ -15,7 +14,6 @@ Vagrant.configure("2") do |config|
       os.flavor = "m1.medium"
       os.image = "ubuntu-16.04-server-cloudimg-amd64"
       os.floating_ip = "192.168.209.186"
-      os.keypair_name = "id_rsa"
       os.security_groups = ["default"]
   end
 end

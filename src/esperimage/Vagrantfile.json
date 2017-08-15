@@ -1,8 +1,7 @@
 {
   "config": {
     "ssh": {
-      "username": "ubuntu",
-      "private_key_path": "/vagrant/id_rsa"
+      "username": "ubuntu"
     },
     "providers": {
       "openstack": {
@@ -14,7 +13,6 @@
         "flavor": "'m1.medium'",
         "image": "'ubuntu-16.04-server-cloudimg-amd64'",
         "floating_ip_pool": "'float'",
-        "keypair_name": "'id_rsa'",
         "security_groups": "['default']"
       }
     },

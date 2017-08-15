@@ -61,30 +61,36 @@ wss.on('connection', (ws, req) => {
           temperature.start(50);
           break;
         case message.Constants.BenchmarkEnd:
-          ssh
-            .connect({
-              host: remoteAddress,
-              username: 'ubuntu',
-              privateKey: '/vagrant/id_rsa'
-            })
-            .then(
-              () => {
-                ssh
-                  .getFile('./benchmark.log', '/home/ubuntu/benchmark.log')
-                  .then(
-                    contents => {
-                      console.log('[WebSocket] Benchmark log get successful');
-                      ws.send(new message.ShutdownMessage().toJson());
-                    },
-                    err => {
-                      console.log(err);
-                    }
-                  );
-              },
-              err => {
-                console.log(err);
-              }
-            );
+          machine.sshConfig((err, out) => {
+            if (err) {
+              console.log(err);
+            }
+
+            ssh
+              .connect({
+                host: remoteAddress,
+                username: 'ubuntu',
+                privateKey: out[0].private_key
+              })
+              .then(
+                () => {
+                  ssh
+                    .getFile('./benchmark.log', '/home/ubuntu/benchmark.log')
+                    .then(
+                      contents => {
+                        console.log('[WebSocket] Benchmark log get successful');
+                        ws.send(new message.ShutdownMessage().toJson());
+                      },
+                      err => {
+                        console.log(err);
+                      }
+                    );
+                },
+                err => {
+                  console.log(err);
+                }
+              );
+          });
           break;
       }
     } catch (err) {
@@ -119,14 +125,7 @@ function cleanup() {
     wss.close();
   }
 
-  if (machine) {
-    machine.destroy((err, out) => {
-      console.log(err, out);
-      process.exit();
-    });
-  } else {
-    process.exit();
-  }
+  process.exit();
 }
 
 process.on('SIGINT', cleanup);
