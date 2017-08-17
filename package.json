@@ -4,7 +4,8 @@
   "description": "Manager for benchmarking of CEP engines.",
   "main": "src/index.js",
   "scripts": {
-    "start": "cd src/ && node index.js"
+    "start": "cd src/ && node index.js",
+    "lint": "prettier --write --single-quote */*.js"
   },
   "repository": {
     "type": "git",
@@ -17,5 +18,8 @@
     "node-ssh": "^4.2.3",
     "node-vagrant": "^1.1.0",
     "ws": "^3.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^1.5.3"
   }
 }
