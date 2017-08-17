@@ -16,6 +16,7 @@
   "dependencies": {
     "express": "^4.15.4",
     "express-react-views": "^0.10.2",
+    "material-ui": "^0.19.0",
     "mqtt": "^2.9.1",
     "node-ssh": "^4.2.3",
     "node-vagrant": "^1.1.0",
