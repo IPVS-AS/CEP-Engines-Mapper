@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { StaticRouter, Route, Switch } from 'react-router';
+import { Route, Switch } from 'react-router';
 
 import Theme from './Theme';
 import Master from './Master';
@@ -16,7 +16,10 @@ class App extends React.Component {
     return (
       <Theme>
         <Master>
-          <Benchmark />
+          <Switch>
+            <Route exact path="/" component={Home} />
+            <Route path="/benchmark" component={Benchmark} />
+          </Switch>
         </Master>
       </Theme>
     );

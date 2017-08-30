@@ -2,7 +2,7 @@ require('babel-register');
 var React = require('react');
 var ReactDOMServer = require('react-dom/server');
 var express = require('express');
-var App = React.createFactory(require('./components/App').default);
+var App = React.createFactory(require('./server').default);
 
 var app = express();
 
@@ -49,9 +49,14 @@ var template = body => {
     `;
 };
 
-app.get('/', (req, res) => {
+app.get('*', (req, res) => {
+  var context = {};
   var markup = ReactDOMServer.renderToString(
-    App({ userAgent: req.headers['user-agent'] })
+    App({
+      location: req.url,
+      context: context,
+      userAgent: req.headers['user-agent']
+    })
   );
   res.send(template(markup));
 });
