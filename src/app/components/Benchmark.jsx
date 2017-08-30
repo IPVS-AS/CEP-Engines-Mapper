@@ -31,9 +31,25 @@ class Benchmark extends React.Component {
     });
   }
 
+  getStyle() {
+    return {
+      root: {
+        display: 'flex',
+        flexDirection: 'column',
+        margin: '0 auto',
+        padding: '24px',
+        minWidth: '40%'
+      },
+      child: {
+        margin: 'auto'
+      }
+    };
+  }
+
   render() {
+    const style = this.getStyle();
     return (
-      <Paper className="home">
+      <Paper style={style.root}>
         <h1>
           {'Benchmark configuration'}
         </h1>

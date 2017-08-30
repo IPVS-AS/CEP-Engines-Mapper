@@ -50,7 +50,9 @@ var template = body => {
 };
 
 app.get('/', (req, res) => {
-  var markup = ReactDOMServer.renderToString(App());
+  var markup = ReactDOMServer.renderToString(
+    App({ userAgent: req.headers['user-agent'] })
+  );
   res.send(template(markup));
 });
 

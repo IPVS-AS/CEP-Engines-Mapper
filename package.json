@@ -6,7 +6,7 @@
   "scripts": {
     "start-dev": "cd src/app && NODE_ENV=development node app.js",
     "start-prod": "cd src/app && NODE_ENV=production node app.js",
-    "build": "cd src/app/ && webpack",
+    "build": "cd src/app/ && NODE_ENV=production webpack -p",
     "lint": "prettier --write --single-quote */*.js"
   },
   "repository": {
@@ -22,6 +22,7 @@
     "mqtt": "^2.9.1",
     "node-ssh": "^4.2.3",
     "node-vagrant": "^1.1.0",
+    "prop-types": "^15.5.10",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "react-router": "^4.1.2",

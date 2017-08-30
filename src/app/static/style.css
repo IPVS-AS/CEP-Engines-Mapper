@@ -3,41 +3,7 @@ html {
 }
 
 html,
-body {
+body,
+h1 {
   margin: 0;
-  padding: 0;
-}
-
-p {
-  margin: 0;
-  text-align: center;
-}
-
-.content {
-  display: flex;
-  padding: 24px 12px;
-}
-
-.home {
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-  padding: 24px;
-  min-width: 40%;
-}
-
-.homeButton {
-  margin: auto;
-}
-
-.footer {
-  position: fixed;
-  bottom: 0px;
-  width: 100%;
-  background-color: #212121 !important;
-  padding: 24px;
-}
-
-.footer p {
-  color: rgba(255, 255, 255, 0.54);
 }
