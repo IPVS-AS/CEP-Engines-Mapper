@@ -9,7 +9,9 @@ class Master extends React.Component {
       <div>
         <link rel="stylesheet" type="text/css" href="/static/style.css" />
         <AppBar title="CEP Engine Benchmarking" showMenuIconButton={false} />
-        {this.props.children}
+        <Paper className="content" rounded={false}>
+          {this.props.children}
+        </Paper>
         <Paper className="footer" rounded={false}>
           <p>
             {'Developed at IPVS'}
