@@ -8,9 +8,16 @@ import { lightWhite, grey900 } from 'material-ui/styles/colors';
 class Master extends React.Component {
   getStyle() {
     return {
+      root: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh'
+      },
       content: {
         display: 'flex',
-        padding: '24px 12px'
+        flex: 1,
+        padding: '24px 12px',
+        overflow: 'auto'
       },
       footer: {
         position: 'fixed',
@@ -20,7 +27,8 @@ class Master extends React.Component {
         padding: '24px'
       },
       p: {
-        color: lightWhite
+        color: lightWhite,
+        textAlign: 'center'
       }
     };
   }
@@ -28,7 +36,7 @@ class Master extends React.Component {
   render() {
     const style = this.getStyle();
     return (
-      <div>
+      <div style={style.root}>
         <link rel="stylesheet" type="text/css" href="/static/style.css" />
         <AppBar title="CEP Engine Benchmarking" showMenuIconButton={false} />
         <Paper style={style.content} rounded={false}>
