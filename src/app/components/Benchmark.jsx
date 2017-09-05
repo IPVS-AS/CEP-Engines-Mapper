@@ -7,6 +7,7 @@ import { List, ListItem } from 'material-ui/List';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import Subheader from 'material-ui/Subheader';
+import RaisedButton from 'material-ui/RaisedButton';
 import IconButton from 'material-ui/IconButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import ContentClear from 'material-ui/svg-icons/content/clear';
@@ -44,6 +45,7 @@ class Benchmark extends React.Component {
     this.getStatementList = this.getStatementList.bind(this);
     this.addEvent = this.addEvent.bind(this);
     this.addStatement = this.addStatement.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   handleChange(name, event) {
@@ -274,6 +276,17 @@ class Benchmark extends React.Component {
     });
   }
 
+  handleSubmit() {
+    fetch('/benchmark', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(this.state.config)
+    });
+  }
+
   getStyle() {
     return {
       root: {
@@ -318,6 +331,12 @@ class Benchmark extends React.Component {
           </Subheader>
           {this.getStatementList()}
         </List>
+        <RaisedButton
+          style={style.child}
+          label="start benchmark"
+          primary={true}
+          onClick={this.handleSubmit}
+        />
       </Paper>
     );
   }
