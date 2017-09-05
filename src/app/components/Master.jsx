@@ -20,8 +20,6 @@ class Master extends React.Component {
         overflow: 'auto'
       },
       footer: {
-        position: 'fixed',
-        bottom: '0px',
         width: '100%',
         backgroundColor: grey900,
         padding: '24px'
