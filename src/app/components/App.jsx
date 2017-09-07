@@ -3,34 +3,26 @@ import PropTypes from 'prop-types';
 import { Route, Switch } from 'react-router';
 
 import SocketProvider from './SocketProvider';
-import Theme from './Theme';
+import ThemeProvider from './ThemeProvider';
 import Master from './Master';
 import Home from './Home';
 import Benchmark from './Benchmark';
 
 class App extends React.Component {
-  getChildContext() {
-    return { userAgent: this.props.userAgent };
-  }
-
   render() {
     return (
       <SocketProvider>
-        <Theme>
+        <ThemeProvider userAgent={this.props.userAgent}>
           <Master>
             <Switch>
               <Route exact path="/" component={Home} />
               <Route path="/benchmark" component={Benchmark} />
             </Switch>
           </Master>
-        </Theme>
+        </ThemeProvider>
       </SocketProvider>
     );
   }
 }
-
-App.childContextTypes = {
-  userAgent: PropTypes.string
-};
 
 export default App;
