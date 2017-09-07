@@ -11,33 +11,33 @@ import ContentAdd from 'material-ui/svg-icons/content/add';
 
 import { EventItem, EventPropertyItem, StatementItem } from './BenchmarkForm';
 
+import message from '../../message';
+
 class Benchmark extends React.Component {
   constructor(props, context) {
     super(props, context);
 
     this.state = {
-      config: {
-        broker: 'tcp://10.0.14.106:1883',
-        endEventName: 'TemperatureEndEvent',
-        events: [
-          {
-            name: 'TemperatureEvent',
-            properties: [
-              {
-                name: 'temperature',
-                type: 'int'
-              }
-            ]
-          }
-        ],
-        statements: [
-          {
-            name: 'AverageTemperature',
-            query:
-              'select avg(temperature) from TemperatureEvent.win:time_batch(5 sec)'
-          }
-        ]
-      }
+      broker: 'tcp://10.0.14.106:1883',
+      endEventName: 'TemperatureEndEvent',
+      events: [
+        {
+          name: 'TemperatureEvent',
+          properties: [
+            {
+              name: 'temperature',
+              type: 'int'
+            }
+          ]
+        }
+      ],
+      statements: [
+        {
+          name: 'AverageTemperature',
+          query:
+            'select avg(temperature) from TemperatureEvent.win:time_batch(5 sec)'
+        }
+      ]
     };
 
     this.getEventList = this.getEventList.bind(this);
@@ -51,7 +51,7 @@ class Benchmark extends React.Component {
     const value = event.target.value;
     this.setState(state => {
       var newState = { ...state };
-      newState.config[name] = value;
+      newState[name] = value;
       return newState;
     });
   }
@@ -60,7 +60,7 @@ class Benchmark extends React.Component {
     const value = event.target.value;
     this.setState(state => {
       var newState = { ...state };
-      newState.config[listName][index][name] = value;
+      newState[listName][index][name] = value;
       return newState;
     });
   }
@@ -69,7 +69,7 @@ class Benchmark extends React.Component {
     const value = event.target.value;
     this.setState(state => {
       var newState = { ...state };
-      newState.config.events[eventIndex].properties[propertyIndex].name = value;
+      newState.events[eventIndex].properties[propertyIndex].name = value;
       return newState;
     });
   }
@@ -83,13 +83,13 @@ class Benchmark extends React.Component {
   ) {
     this.setState(state => {
       var newState = { ...state };
-      newState.config.events[eventIndex].properties[propertyIndex].type = value;
+      newState.events[eventIndex].properties[propertyIndex].type = value;
       return newState;
     });
   }
 
   getEventList() {
-    return this.state.config.events
+    return this.state.events
       .map((event, index) =>
         <EventItem
           key={index}
@@ -115,7 +115,7 @@ class Benchmark extends React.Component {
   }
 
   getEventPropertyList(eventIndex) {
-    return this.state.config.events[eventIndex].properties
+    return this.state.events[eventIndex].properties
       .map((property, propertyIndex) =>
         <EventPropertyItem
           key={propertyIndex}
@@ -148,7 +148,7 @@ class Benchmark extends React.Component {
   }
 
   getStatementList() {
-    return this.state.config.statements
+    return this.state.statements
       .map((statement, index) =>
         <StatementItem
           key={index}
@@ -181,7 +181,7 @@ class Benchmark extends React.Component {
   addEvent() {
     this.setState(state => {
       var newState = { ...state };
-      newState.config.events.push({
+      newState.events.push({
         name: '',
         properties: [{ name: '', type: 'string' }]
       });
@@ -192,7 +192,7 @@ class Benchmark extends React.Component {
   deleteEvent(index) {
     this.setState(state => {
       var newState = { ...state };
-      newState.config.events.splice(index, 1);
+      newState.events.splice(index, 1);
       return newState;
     });
   }
@@ -200,7 +200,7 @@ class Benchmark extends React.Component {
   addEventProperty(index) {
     this.setState(state => {
       var newState = { ...state };
-      newState.config.events[index].properties.push({
+      newState.events[index].properties.push({
         name: '',
         type: 'string'
       });
@@ -211,7 +211,7 @@ class Benchmark extends React.Component {
   deleteEventProperty(eventIndex, propertyIndex) {
     this.setState(state => {
       var newState = { ...state };
-      newState.config.events[eventIndex].properties.splice(propertyIndex, 1);
+      newState.events[eventIndex].properties.splice(propertyIndex, 1);
       return newState;
     });
   }
@@ -219,7 +219,7 @@ class Benchmark extends React.Component {
   addStatement() {
     this.setState(state => {
       var newState = { ...state };
-      newState.config.statements.push({ name: '', query: '' });
+      newState.statements.push({ name: '', query: '' });
       return newState;
     });
   }
@@ -227,13 +227,15 @@ class Benchmark extends React.Component {
   deleteStatement(index) {
     this.setState(state => {
       var newState = { ...state };
-      newState.config.statements.splice(index, 1);
+      newState.statements.splice(index, 1);
       return newState;
     });
   }
 
   handleSubmit() {
-    this.context.ws.send(JSON.stringify(this.state.config));
+    this.context.ws.send(
+      new message.SetupCepEngineMessage(this.state).toJson()
+    );
   }
 
   getStyle() {
@@ -261,13 +263,13 @@ class Benchmark extends React.Component {
         <TextField
           floatingLabelText="MQTT broker"
           floatingLabelFixed={true}
-          value={this.state.config.broker}
+          value={this.state.broker}
           onChange={this.handleChange.bind(this, 'broker')}
         />
         <TextField
           floatingLabelText="End benchmark topic name"
           floatingLabelFixed={true}
-          value={this.state.config.endEventName}
+          value={this.state.endEventName}
           onChange={this.handleChange.bind(this, 'endEventName')}
         />
         <List>
