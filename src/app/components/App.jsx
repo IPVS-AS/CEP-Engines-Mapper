@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Route, Switch } from 'react-router';
 
+import SocketProvider from './SocketProvider';
 import Theme from './Theme';
 import Master from './Master';
 import Home from './Home';
@@ -14,14 +15,16 @@ class App extends React.Component {
 
   render() {
     return (
-      <Theme>
-        <Master>
-          <Switch>
-            <Route exact path="/" component={Home} />
-            <Route path="/benchmark" component={Benchmark} />
-          </Switch>
-        </Master>
-      </Theme>
+      <SocketProvider>
+        <Theme>
+          <Master>
+            <Switch>
+              <Route exact path="/" component={Home} />
+              <Route path="/benchmark" component={Benchmark} />
+            </Switch>
+          </Master>
+        </Theme>
+      </SocketProvider>
     );
   }
 }

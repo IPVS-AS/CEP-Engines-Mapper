@@ -2,6 +2,8 @@ require('babel-register');
 var React = require('react');
 var ReactDOMServer = require('react-dom/server');
 var express = require('express');
+var http = require('http');
+var WebSocket = require('ws');
 var bodyParser = require('body-parser');
 var App = React.createFactory(require('./server').default);
 
@@ -63,10 +65,24 @@ app.get('*', (req, res) => {
   res.send(template(markup));
 });
 
-app.post('/benchmark', (req, res) => {
-  console.log(JSON.stringify(req.body));
+var server = http.createServer(app);
+
+var wss = new WebSocket.Server({ server: server, path: '/' });
+wss.on('listening', () => {
+  console.log('[Express] WebSocketServer started listening');
 });
 
-app.listen(app.get('port'), () => {
+wss.on('connection', ws => {
+  console.log('[Express] WebSocketClient connected');
+
+  ws.on('message', data => {
+  });
+
+  ws.on('close', (code, reason) => {
+    console.log('[Express] Connection closed: ' + code + ' ' + reason);
+  });
+});
+
+server.listen(app.get('port'), () => {
   console.log('[Express] Server listening on port ' + app.get('port'));
 });

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 
 import Paper from 'material-ui/Paper';
@@ -13,8 +14,9 @@ import ContentAdd from 'material-ui/svg-icons/content/add';
 import ContentClear from 'material-ui/svg-icons/content/clear';
 
 class Benchmark extends React.Component {
-  constructor() {
-    super();
+  constructor(props, context) {
+    super(props, context);
+
     this.state = {
       config: {
         broker: 'tcp://10.0.14.106:1883',
@@ -277,14 +279,7 @@ class Benchmark extends React.Component {
   }
 
   handleSubmit() {
-    fetch('/benchmark', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(this.state.config)
-    });
+    this.context.ws.send(JSON.stringify(this.state.config));
   }
 
   getStyle() {
@@ -341,5 +336,9 @@ class Benchmark extends React.Component {
     );
   }
 }
+
+Benchmark.contextTypes = {
+  ws: PropTypes.object
+};
 
 export default Benchmark;
