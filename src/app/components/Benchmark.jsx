@@ -5,13 +5,11 @@ import { Link } from 'react-router-dom';
 import Paper from 'material-ui/Paper';
 import TextField from 'material-ui/TextField';
 import { List, ListItem } from 'material-ui/List';
-import SelectField from 'material-ui/SelectField';
-import MenuItem from 'material-ui/MenuItem';
 import Subheader from 'material-ui/Subheader';
 import RaisedButton from 'material-ui/RaisedButton';
-import IconButton from 'material-ui/IconButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+
+import { EventItem, EventPropertyItem, StatementItem } from './BenchmarkForm';
 
 class Benchmark extends React.Component {
   constructor(props, context) {
@@ -43,7 +41,6 @@ class Benchmark extends React.Component {
     };
 
     this.getEventList = this.getEventList.bind(this);
-    this.getEventPropertyList = this.getEventPropertyList.bind(this);
     this.getStatementList = this.getStatementList.bind(this);
     this.addEvent = this.addEvent.bind(this);
     this.addStatement = this.addStatement.bind(this);
@@ -93,28 +90,19 @@ class Benchmark extends React.Component {
 
   getEventList() {
     return this.state.config.events
-      .map((event, eventIndex) =>
-        <ListItem
-          key={eventIndex}
-          disabled={true}
-          innerDivStyle={{ padding: 0 }}
-          initiallyOpen={true}
-          nestedItems={this.getEventPropertyList(eventIndex)}
-        >
-          <IconButton onClick={this.deleteEvent.bind(this, eventIndex)}>
-            <ContentClear />
-          </IconButton>
-          <TextField
-            floatingLabelText="Event name"
-            value={event.name}
-            onChange={this.handleChangeList.bind(
-              this,
-              'events',
-              'name',
-              eventIndex
-            )}
-          />
-        </ListItem>
+      .map((event, index) =>
+        <EventItem
+          key={index}
+          event={event}
+          onNameChange={this.handleChangeList.bind(
+            this,
+            'events',
+            'name',
+            index
+          )}
+          getPropertyList={this.getEventPropertyList.bind(this, index)}
+          onDelete={this.deleteEvent.bind(this, index)}
+        />
       )
       .concat([
         <ListItem
@@ -129,51 +117,25 @@ class Benchmark extends React.Component {
   getEventPropertyList(eventIndex) {
     return this.state.config.events[eventIndex].properties
       .map((property, propertyIndex) =>
-        <ListItem
+        <EventPropertyItem
           key={propertyIndex}
-          disabled={true}
-          innerDivStyle={{ padding: 0 }}
-        >
-          <div style={{ display: 'flex' }}>
-            <IconButton
-              onClick={this.deleteEventProperty.bind(
-                this,
-                eventIndex,
-                propertyIndex
-              )}
-            >
-              <ContentClear />
-            </IconButton>
-            <TextField
-              floatingLabelText="Property name"
-              value={property.name}
-              onChange={this.handleChangeEventPropertyName.bind(
-                this,
-                eventIndex,
-                propertyIndex
-              )}
-            />
-            <SelectField
-              floatingLabelText="Property type"
-              value={property.type}
-              onChange={this.handleChangeEventPropertyType.bind(
-                this,
-                eventIndex,
-                propertyIndex
-              )}
-            >
-              <MenuItem value={'string'} primaryText="String" />
-              <MenuItem value={'int'} primaryText="Integer" />
-              <MenuItem value={'long'} primaryText="Long" />
-              <MenuItem value={'boolean'} primaryText="Boolean" />
-              <MenuItem value={'double'} primaryText="Double" />
-              <MenuItem value={'float'} primaryText="Float" />
-              <MenuItem value={'short'} primaryText="Short" />
-              <MenuItem value={'char'} primaryText="Char" />
-              <MenuItem value={'byte'} primaryText="Byte" />
-            </SelectField>
-          </div>
-        </ListItem>
+          property={property}
+          onNameChange={this.handleChangeEventPropertyName.bind(
+            this,
+            eventIndex,
+            propertyIndex
+          )}
+          onTypeChange={this.handleChangeEventPropertyType.bind(
+            this,
+            eventIndex,
+            propertyIndex
+          )}
+          onDelete={this.deleteEventProperty.bind(
+            this,
+            eventIndex,
+            propertyIndex
+          )}
+        />
       )
       .concat([
         <ListItem
@@ -188,31 +150,23 @@ class Benchmark extends React.Component {
   getStatementList() {
     return this.state.config.statements
       .map((statement, index) =>
-        <ListItem key={index} disabled={true} innerDivStyle={{ padding: 0 }}>
-          <IconButton onClick={this.deleteStatement.bind(this, index)}>
-            <ContentClear />
-          </IconButton>
-          <TextField
-            floatingLabelText="Statement name"
-            value={statement.name}
-            onChange={this.handleChangeList.bind(
-              this,
-              'statements',
-              'name',
-              index
-            )}
-          />
-          <TextField
-            floatingLabelText="Statement query"
-            value={statement.query}
-            onChange={this.handleChangeList.bind(
-              this,
-              'statements',
-              'query',
-              index
-            )}
-          />
-        </ListItem>
+        <StatementItem
+          key={index}
+          statement={statement}
+          onNameChange={this.handleChangeList.bind(
+            this,
+            'statements',
+            'name',
+            index
+          )}
+          onQueryChange={this.handleChangeList.bind(
+            this,
+            'statements',
+            'query',
+            index
+          )}
+          onDelete={this.deleteStatement.bind(this, index)}
+        />
       )
       .concat([
         <ListItem
