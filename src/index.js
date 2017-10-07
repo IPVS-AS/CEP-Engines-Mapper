@@ -5,14 +5,13 @@ var ssh = new node_ssh();
 var vagrant = require('node-vagrant');
 var temperature = require('./temperature');
 var message = require('./message');
+var App = require('./app');
 
-var wss = new WebSocket.Server({ port: 8080 });
 var machine = null;
 
-wss.on('listening', () => {
-  console.log('[WebSocketServer] Started listening on port 8080');
-
+function newBenchmark(config) {
   machine = new vagrant.create({ cwd: './esperimage/' });
+  machine.config = config;
 
   var Vagrantfile = JSON.parse(
     fs.readFileSync('./esperimage/Vagrantfile.json', 'utf8')
@@ -43,6 +42,30 @@ wss.on('listening', () => {
       console.log(out);
     });
   });
+}
+
+var wss = new WebSocket.Server({ port: 8080 });
+
+wss.on('listening', () => {
+  console.log('[WebSocketServer] Started listening on port 8080');
+
+  var app = new App(3000);
+
+  app.on('message', data => {
+    console.log('[App] Received message');
+    console.log(data);
+
+    try {
+      var incomingMessage = message.Message.fromJson(data);
+      switch (incomingMessage.header.type) {
+        case message.Constants.SetupCepEngine:
+          newBenchmark(incomingMessage);
+          break;
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  });
 });
 
 wss.on('connection', (ws, req) => {
@@ -61,6 +84,7 @@ wss.on('connection', (ws, req) => {
           temperature.start(50);
           break;
         case message.Constants.BenchmarkEnd:
+          console.log('get log');
           machine.sshConfig((err, out) => {
             if (err) {
               console.log(err);
@@ -79,7 +103,15 @@ wss.on('connection', (ws, req) => {
                     .then(
                       contents => {
                         console.log('[WebSocket] Benchmark log get successful');
-                        ws.send(new message.ShutdownMessage().toJson());
+                        console.log('[Vagrant] Destroy machine');
+                        machine.destroy((err, out) => {
+                          if (err) {
+                            console.log(err);
+                          }
+
+                          console.log(out);
+                          machine = null;
+                        });
                       },
                       err => {
                         console.log(err);
@@ -100,8 +132,8 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', (code, reason) => {
     console.log('[WebSocket] Connection closed: ' + code + ' ' + reason);
-    console.log('[Vagrant] Destroy machine');
     if (machine) {
+      console.log('[Vagrant] Destroy machine');
       machine.destroy((err, out) => {
         if (err) {
           throw new Error(err);
@@ -113,7 +145,7 @@ wss.on('connection', (ws, req) => {
     }
   });
 
-  ws.send(new message.SetupCepEngineMessage().toJson());
+  ws.send(machine.config.toJson());
 });
 
 process.stdin.resume();
@@ -123,6 +155,17 @@ function cleanup() {
 
   if (wss) {
     wss.close();
+  }
+
+  if (machine) {
+    machine.destroy((err, out) => {
+      if (err) {
+        throw new Error(err);
+      }
+
+      console.log(out);
+      machine = null;
+    });
   }
 
   process.exit();

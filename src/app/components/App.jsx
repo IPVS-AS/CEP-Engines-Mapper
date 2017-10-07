@@ -15,8 +15,7 @@ class App extends React.Component {
         <ThemeProvider userAgent={this.props.userAgent}>
           <Master>
             <Switch>
-              <Route exact path="/" component={Home} />
-              <Route path="/benchmark" component={Benchmark} />
+              <Benchmark />
             </Switch>
           </Master>
         </ThemeProvider>

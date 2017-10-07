@@ -1,14 +1,14 @@
 var webpack = require('webpack');
 var path = require('path');
 
-var entry = './client.js';
+var entry = __dirname + '/client.js';
 var plugins = [];
 
 if (process.env.NODE_ENV === 'development') {
   entry = [
     'webpack-hot-middleware/client?reload=true',
     'react-hot-loader/patch',
-    './client.js'
+    __dirname + '/client.js'
   ];
   plugins.push(new webpack.HotModuleReplacementPlugin());
 }

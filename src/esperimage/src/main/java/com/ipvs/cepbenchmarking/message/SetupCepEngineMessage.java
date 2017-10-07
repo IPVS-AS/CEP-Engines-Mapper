@@ -24,11 +24,11 @@ public class SetupCepEngineMessage extends Message {
         JSONArray jsonArray = (JSONArray) this.payload.get("events");
         events = new HashMap<String, Map<String, String>>();
         for (Object input : jsonArray) {
-            String eventName = (String) ((JSONObject) input).get("eventName");
+            String eventName = (String) ((JSONObject) input).get("name");
 
             Map<String, String> properties = new HashMap<String,String>();
             for (Object property : (JSONArray) ((JSONObject) input).get("properties")) {
-                String propertyName = (String) ((JSONObject) property).get("property");
+                String propertyName = (String) ((JSONObject) property).get("name");
                 String propertyType = (String) ((JSONObject) property).get("type");
                 properties.put(propertyName, propertyType);
             }
@@ -39,8 +39,8 @@ public class SetupCepEngineMessage extends Message {
         jsonArray = (JSONArray) this.payload.get("statements");
         statements = new HashMap<String, String>();
         for (Object output : jsonArray) {
-            String statementName = (String) ((JSONObject) output).get("statementName");
-            String statement = (String) ((JSONObject) output).get("statement");
+            String statementName = (String) ((JSONObject) output).get("name");
+            String statement = (String) ((JSONObject) output).get("query");
             statements.put(statementName, statement);
         }
     }

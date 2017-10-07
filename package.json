@@ -4,9 +4,9 @@
   "description": "Manager for benchmarking of CEP engines.",
   "main": "src/index.js",
   "scripts": {
-    "start-dev": "cd src/app && NODE_ENV=development node app.js",
-    "start-prod": "cd src/app && NODE_ENV=production node app.js",
-    "build": "cd src/app/ && NODE_ENV=production webpack -p",
+    "start-dev": "cd src && NODE_ENV=development node index.js",
+    "start-prod": "cd src && NODE_ENV=production node index.js",
+    "build": "cd src/app && NODE_ENV=production webpack -p",
     "lint": "prettier --write --single-quote */*.js"
   },
   "repository": {
