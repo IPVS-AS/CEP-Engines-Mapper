@@ -8,11 +8,13 @@ import java.util.logging.SimpleFormatter;
 import com.espertech.esper.client.EPServiceProvider;
 import com.espertech.esper.client.EPServiceProviderManager;
 import com.espertech.esper.client.EPStatement;
-import com.espertech.esper.client.UpdateListener;
+import com.espertech.esper.client.StatementAwareUpdateListener;
 import com.espertech.esper.client.EventBean;
 
 import com.espertech.esper.client.EPException;
 import com.espertech.esper.client.ConfigurationException;
+
+import org.json.simple.JSONObject;
 
 public enum Esper {
     INSTANCE;
@@ -48,11 +50,21 @@ public enum Esper {
         try {
             EPStatement statement = serviceProvider.getEPAdministrator().createEPL(eplStatement, statementName);
 
-            statement.addListener(new UpdateListener() {
-                public void update(EventBean[] newEvents, EventBean[] oldEvents) {
+            statement.addListener(new StatementAwareUpdateListener() {
+                public void update(EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement, EPServiceProvider serviceProvider) {
                     EventBean event = newEvents[0];
                     // TODO Make sure the type is correct
-                    LOGGER.info(((Map) event.getUnderlying()).toString());
+
+                    JSONObject jsonObject = new JSONObject();
+
+                    JSONObject jsonStatement = new JSONObject();
+                    jsonStatement.put("name", statement.getName());
+                    jsonStatement.put("query", statement.getText());
+
+                    jsonObject.put("statement", jsonStatement);
+                    jsonObject.put("event", ((Map) event.getUnderlying()).toString());
+
+                    LOGGER.info(jsonObject.toJSONString());
                 }
             });
         } catch (EPException e) {
