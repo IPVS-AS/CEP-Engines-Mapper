@@ -8,6 +8,13 @@ var message = require('./message');
 var App = require('./app');
 
 var machine = null;
+var app = null;
+
+const MachineState = {
+  Provisioning: 'Provisioning',
+  Benchmarking: 'Benchmarking',
+  Finished: 'Finished'
+};
 
 function newBenchmark(config) {
   machine = new vagrant.create({ cwd: './esperimage/' });
@@ -34,6 +41,11 @@ function newBenchmark(config) {
       }
     });
 
+    machine.state = MachineState.Provisioning;
+    app.broadcast(
+      new message.UpdateConsoleMessage({ state: machine.state }).toJson()
+    );
+
     machine.up((err, out) => {
       if (err) {
         throw new Error(err);
@@ -49,7 +61,7 @@ var wss = new WebSocket.Server({ port: 8080 });
 wss.on('listening', () => {
   console.log('[WebSocketServer] Started listening on port 8080');
 
-  var app = new App(3000);
+  app = new App(3000);
 
   app.on('message', data => {
     console.log('[App] Received message');
@@ -81,6 +93,10 @@ wss.on('connection', (ws, req) => {
       var incomingMessage = message.Message.fromJson(data);
       switch (incomingMessage.header.type) {
         case message.Constants.CepEngineReady:
+          machine.state = MachineState.Benchmarking;
+          app.broadcast(
+            new message.UpdateConsoleMessage({ state: machine.state }).toJson()
+          );
           temperature.start(50);
           break;
         case message.Constants.BenchmarkEnd:
@@ -109,6 +125,12 @@ wss.on('connection', (ws, req) => {
                             console.log(err);
                           }
 
+                          machine.state = MachineState.Finished;
+                          app.broadcast(
+                            new message.UpdateConsoleMessage({
+                              state: machine.state
+                            }).toJson()
+                          );
                           console.log(out);
                           machine = null;
                         });

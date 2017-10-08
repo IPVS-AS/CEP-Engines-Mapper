@@ -70,12 +70,12 @@ class App extends EventEmitter {
 
     var server = http.createServer(app);
 
-    var wss = new WebSocket.Server({ server: server, path: '/' });
-    wss.on('listening', () => {
+    this.wss = new WebSocket.Server({ server: server, path: '/' });
+    this.wss.on('listening', () => {
       console.log('[Express] WebSocketServer started listening');
     });
 
-    wss.on('connection', ws => {
+    this.wss.on('connection', ws => {
       console.log('[Express] WebSocketClient connected');
 
       ws.on('message', data => {
@@ -89,6 +89,14 @@ class App extends EventEmitter {
 
     server.listen(port, () => {
       console.log('[Express] Server listening on port ' + port);
+    });
+  }
+
+  broadcast(message) {
+    this.wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
     });
   }
 }

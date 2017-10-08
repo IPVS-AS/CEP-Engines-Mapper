@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 
 import Paper from 'material-ui/Paper';
 import TextField from 'material-ui/TextField';
@@ -236,6 +236,7 @@ class Benchmark extends React.Component {
     this.context.ws.send(
       new message.SetupCepEngineMessage(this.state).toJson()
     );
+    this.props.history.push('/console');
   }
 
   getStyle() {
@@ -293,8 +294,14 @@ class Benchmark extends React.Component {
   }
 }
 
+Benchmark.propTypes = {
+  match: PropTypes.object.isRequired,
+  location: PropTypes.object.isRequired,
+  history: PropTypes.object.isRequired
+};
+
 Benchmark.contextTypes = {
   ws: PropTypes.object
 };
 
-export default Benchmark;
+export default withRouter(Benchmark);

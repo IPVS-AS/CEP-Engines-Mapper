@@ -13,10 +13,6 @@ class SocketProvider extends React.Component {
     const host = location.origin.replace(/^http/, 'ws');
     var ws = new WebSocket(host);
 
-    ws.onmessage = message => {
-      console.log(message.data);
-    };
-
     var self = this;
     ws.onopen = () => {
       self.setState({ ws: ws });

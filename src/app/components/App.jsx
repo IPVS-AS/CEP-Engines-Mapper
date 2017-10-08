@@ -7,6 +7,7 @@ import ThemeProvider from './ThemeProvider';
 import Master from './Master';
 import Home from './Home';
 import Benchmark from './Benchmark';
+import Console from './Console';
 
 class App extends React.Component {
   render() {
@@ -15,7 +16,8 @@ class App extends React.Component {
         <ThemeProvider userAgent={this.props.userAgent}>
           <Master>
             <Switch>
-              <Benchmark />
+              <Route exact path="/" component={Benchmark} />
+              <Route path="/console" component={Console} />
             </Switch>
           </Master>
         </ThemeProvider>
