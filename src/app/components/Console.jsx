@@ -35,7 +35,10 @@ class Console extends React.Component {
   getResultList() {
     const style = this.getStyle();
     return this.state.results.map((result, index) =>
-      <ListItem key={index}>
+      <ListItem
+        key={index}
+        nestedItems={[<ListItem primaryText={result.statement.query} />]}
+      >
         <div style={style.div}>
           <p>
             {result.statement.name}
