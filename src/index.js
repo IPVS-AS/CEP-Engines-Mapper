@@ -1,4 +1,5 @@
 var fs = require('fs');
+var path = require('path');
 var WebSocket = require('ws');
 var node_ssh = require('node-ssh');
 var ssh = new node_ssh();
@@ -43,7 +44,7 @@ function newBenchmark(config) {
 
     machine.state = MachineState.Provisioning;
     app.broadcast(
-      new message.UpdateConsoleMessage({ state: machine.state }).toJson()
+      new message.UpdateConsoleMessage({ machineState: machine.state }).toJson()
     );
 
     machine.up((err, out) => {
@@ -95,7 +96,9 @@ wss.on('connection', (ws, req) => {
         case message.Constants.CepEngineReady:
           machine.state = MachineState.Benchmarking;
           app.broadcast(
-            new message.UpdateConsoleMessage({ state: machine.state }).toJson()
+            new message.UpdateConsoleMessage({
+              machineState: machine.state
+            }).toJson()
           );
           temperature.start(50);
           break;
@@ -115,9 +118,12 @@ wss.on('connection', (ws, req) => {
               .then(
                 () => {
                   ssh
-                    .getFile('./benchmark.log', '/home/ubuntu/benchmark.log')
+                    .getFile(
+                      path.join(__dirname, 'benchmark.log'),
+                      '/home/ubuntu/benchmark.log'
+                    )
                     .then(
-                      contents => {
+                      () => {
                         console.log('[WebSocket] Benchmark log get successful');
                         console.log('[Vagrant] Destroy machine');
                         machine.destroy((err, out) => {
@@ -125,14 +131,40 @@ wss.on('connection', (ws, req) => {
                             console.log(err);
                           }
 
-                          machine.state = MachineState.Finished;
-                          app.broadcast(
-                            new message.UpdateConsoleMessage({
-                              state: machine.state
-                            }).toJson()
-                          );
                           console.log(out);
-                          machine = null;
+
+                          fs.readFile(
+                            path.join(__dirname, 'benchmark.log'),
+                            (err, data) => {
+                              if (err) {
+                                console.log(err);
+                              }
+
+                              var logEvents = data
+                                .toString()
+                                .split('\n')
+                                .filter(x => x)
+                                .map(JSON.parse);
+
+                              var results = [];
+
+                              logEvents.forEach(logEvent => {
+                                results.push({
+                                  timestamp: logEvent.timestamp,
+                                  statement: JSON.parse(logEvent.message)
+                                    .statement
+                                });
+                              });
+
+                              machine.state = MachineState.Finished;
+                              app.broadcast(
+                                new message.UpdateConsoleMessage({
+                                  machineState: machine.state,
+                                  results: results
+                                }).toJson()
+                              );
+                            }
+                          );
                         });
                       },
                       err => {

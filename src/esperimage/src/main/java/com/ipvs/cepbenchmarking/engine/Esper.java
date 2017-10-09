@@ -64,7 +64,7 @@ public enum Esper {
                     jsonObject.put("statement", jsonStatement);
                     jsonObject.put("event", ((Map) event.getUnderlying()).toString());
 
-                    LOGGER.info(jsonObject.toJSONString());
+                    LOGGER.info(jsonObject.toString());
                 }
             });
         } catch (EPException e) {
