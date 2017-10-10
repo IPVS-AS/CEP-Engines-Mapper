@@ -35,26 +35,26 @@ class Benchmark extends React.Component {
         {
           name: 'WarningTemperature',
           query:
-            'select * from TemperatureEvent ' +
-            'match_recognize ( ' +
-            'measures A as temp1, B as temp2 ' +
-            'pattern (A B) ' +
-            'define ' +
-            'A as A.temperature > 200, ' +
-            'B as B.temperature > 200)'
+            'select * from TemperatureEvent\n' +
+            'match_recognize (\n' +
+            'measures A as temp1, B as temp2\n' +
+            'pattern (A B)\n' +
+            'define\n' +
+            'A as A.temperature > 400,\n' +
+            'B as B.temperature > 400)'
         },
         {
           name: 'CriticalTemperature',
           query:
-            'select * from TemperatureEvent ' +
-            'match_recognize ( ' +
-            'measures A as temp1, B as temp2, C as temp3, D as temp4 ' +
-            'pattern (A B C D) ' +
-            'define ' +
-            'A as A.temperature > 200, ' +
-            'B as (A.temperature < B.temperature), ' +
-            'C as (B.temperature < C.temperature), ' +
-            'D as (C.temperature < D.temperature) and ' +
+            'select * from TemperatureEvent\n' +
+            'match_recognize (\n' +
+            'measures A as temp1, B as temp2, C as temp3, D as temp4\n' +
+            'pattern (A B C D)\n' +
+            'define\n' +
+            'A as A.temperature > 100,\n' +
+            'B as (A.temperature < B.temperature),\n' +
+            'C as (A.temperature < C.temperature),\n' +
+            'D as (A.temperature < D.temperature) and\n' +
             'D.temperature > (A.temperature * 1.5 ))'
         }
       ]

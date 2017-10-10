@@ -64,7 +64,18 @@ export class EventPropertyItem extends React.Component {
 }
 
 export class StatementItem extends React.Component {
+  getStyle() {
+    return {
+      textarea: {
+        width: '100%',
+        height: '200px',
+        resize: 'none'
+      }
+    };
+  }
+
   render() {
+    const style = this.getStyle();
     return (
       <ListItem disabled={true} innerDivStyle={{ padding: 0 }}>
         <IconButton onClick={this.props.onDelete}>
@@ -75,11 +86,13 @@ export class StatementItem extends React.Component {
           value={this.props.statement.name}
           onChange={this.props.onNameChange}
         />
-        <TextField
-          floatingLabelText="Statement query"
-          value={this.props.statement.query}
-          onChange={this.props.onQueryChange}
-        />
+        <div>
+          <textarea
+            style={style.textarea}
+            value={this.props.statement.query}
+            onChange={this.props.onQueryChange}
+          />
+        </div>
       </ListItem>
     );
   }
