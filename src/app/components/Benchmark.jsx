@@ -33,9 +33,29 @@ class Benchmark extends React.Component {
       ],
       statements: [
         {
-          name: 'AverageTemperature',
+          name: 'WarningTemperature',
           query:
-            'select avg(temperature) from TemperatureEvent.win:time_batch(5 sec)'
+            'select * from TemperatureEvent ' +
+            'match_recognize ( ' +
+            'measures A as temp1, B as temp2 ' +
+            'pattern (A B) ' +
+            'define ' +
+            'A as A.temperature > 200, ' +
+            'B as B.temperature > 200)'
+        },
+        {
+          name: 'CriticalTemperature',
+          query:
+            'select * from TemperatureEvent ' +
+            'match_recognize ( ' +
+            'measures A as temp1, B as temp2, C as temp3, D as temp4 ' +
+            'pattern (A B C D) ' +
+            'define ' +
+            'A as A.temperature > 200, ' +
+            'B as (A.temperature < B.temperature), ' +
+            'C as (B.temperature < C.temperature), ' +
+            'D as (C.temperature < D.temperature) and ' +
+            'D.temperature > (A.temperature * 1.5 ))'
         }
       ]
     };

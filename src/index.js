@@ -100,7 +100,7 @@ wss.on('connection', (ws, req) => {
               machineState: machine.state
             }).toJson()
           );
-          temperature.start(50);
+          temperature.start(200);
           break;
         case message.Constants.BenchmarkEnd:
           console.log('get log');
@@ -149,10 +149,11 @@ wss.on('connection', (ws, req) => {
                               var results = [];
 
                               logEvents.forEach(logEvent => {
+                                var message = JSON.parse(logEvent.message);
                                 results.push({
                                   timestamp: logEvent.timestamp,
-                                  statement: JSON.parse(logEvent.message)
-                                    .statement
+                                  statement: message.statement,
+                                  events: message.event
                                 });
                               });
 

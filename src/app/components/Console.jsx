@@ -37,7 +37,7 @@ class Console extends React.Component {
     return this.state.results.map((result, index) =>
       <ListItem
         key={index}
-        nestedItems={[<ListItem primaryText={result.statement.query} />]}
+        nestedItems={[<ListItem primaryText={result.events} />]}
       >
         <div style={style.div}>
           <p>
