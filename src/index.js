@@ -3,13 +3,13 @@ var path = require('path');
 var WebSocket = require('ws');
 var node_ssh = require('node-ssh');
 var ssh = new node_ssh();
-var vagrant = require('node-vagrant');
+var Ansible = require('node-ansible');
 var temperature = require('./temperature');
 var message = require('./message');
 var App = require('./app');
 
-var machine = null;
 var app = null;
+var machine = {};
 
 const MachineState = {
   Provisioning: 'Provisioning',
@@ -18,43 +18,56 @@ const MachineState = {
 };
 
 function newBenchmark(config) {
-  machine = new vagrant.create({ cwd: './esperimage/' });
   machine.config = config;
+  machine.playbook = new Ansible.Playbook()
+    .playbook('openstack_deploy')
+    .variables({ instance_name: 'benchmarking' });
 
-  var Vagrantfile = JSON.parse(
-    fs.readFileSync('./esperimage/Vagrantfile.json', 'utf8')
-  );
-  machine.init(null, Vagrantfile, (err, out) => {
-    if (err) {
-      throw new Error(err);
-    }
-
-    machine.on('progress', out => {
-      console.log('download progress: ', out);
-    });
-
-    machine.on('up-progress', out => {
-      if (out != '\n') {
-        console.log(
-          'up progress: ',
-          out.replace(/^(==>\s|\s*)default:\s|\n/g, '')
-        );
-      }
-    });
-
-    machine.state = MachineState.Provisioning;
-    app.broadcast(
-      new message.UpdateConsoleMessage({ machineState: machine.state }).toJson()
-    );
-
-    machine.up((err, out) => {
-      if (err) {
-        throw new Error(err);
-      }
-
-      console.log(out);
-    });
+  machine.playbook.on('stdout', data => {
+    console.log(data.toString());
   });
+
+  machine.playbook.on('stderr', data => {
+    console.log(data.toString());
+  });
+
+  machine.state = MachineState.Provisioning;
+  app.broadcast(
+    new message.UpdateConsoleMessage({ machineState: machine.state }).toJson()
+  );
+
+  machine.playbook.exec().then(
+    () => {
+      console.log('success');
+    },
+    err => {
+      console.log(err);
+    }
+  );
+}
+
+function destroyInstance(instanceName, callback) {
+  machine = {};
+  var playbook = new Ansible.Playbook()
+    .playbook('openstack_destroy')
+    .variables({ instance_name: instanceName });
+
+  playbook.on('stdout', data => {
+    console.log(data.toString());
+  });
+
+  playbook.on('stderr', data => {
+    console.log(data.toString());
+  });
+
+  playbook.exec().then(
+    () => {
+      callback(null);
+    },
+    err => {
+      callback(err);
+    }
+  );
 }
 
 var wss = new WebSocket.Server({ port: 8080 });
@@ -103,81 +116,57 @@ wss.on('connection', (ws, req) => {
           temperature.start(200);
           break;
         case message.Constants.BenchmarkEnd:
-          console.log('get log');
-          machine.sshConfig((err, out) => {
-            if (err) {
-              console.log(err);
-            }
+          var getlog = new Ansible.Playbook()
+            .playbook('openstack_getlog')
+            .variables({ instance_name: 'benchmarking' });
 
-            ssh
-              .connect({
-                host: remoteAddress,
-                username: 'ubuntu',
-                privateKey: out[0].private_key
-              })
-              .then(
-                () => {
-                  ssh
-                    .getFile(
-                      path.join(__dirname, 'benchmark.log'),
-                      '/home/ubuntu/benchmark.log'
-                    )
-                    .then(
-                      () => {
-                        console.log('[WebSocket] Benchmark log get successful');
-                        console.log('[Vagrant] Destroy machine');
-                        machine.destroy((err, out) => {
-                          if (err) {
-                            console.log(err);
-                          }
+          getlog.exec().then(
+            () => {
+              fs.readFile(
+                path.join(__dirname, 'logs/benchmark.log'),
+                (err, data) => {
+                  if (err) {
+                    console.log(err);
+                  }
 
-                          console.log(out);
+                  var logEvents = data
+                    .toString()
+                    .split('\n')
+                    .filter(x => x)
+                    .map(JSON.parse);
 
-                          fs.readFile(
-                            path.join(__dirname, 'benchmark.log'),
-                            (err, data) => {
-                              if (err) {
-                                console.log(err);
-                              }
+                  var results = [];
 
-                              var logEvents = data
-                                .toString()
-                                .split('\n')
-                                .filter(x => x)
-                                .map(JSON.parse);
+                  logEvents.forEach(logEvent => {
+                    var message = JSON.parse(logEvent.message);
+                    results.push({
+                      timestamp: logEvent.timestamp,
+                      statement: message.statement,
+                      events: message.event
+                    });
+                  });
 
-                              var results = [];
+                  machine.state = MachineState.Finished;
+                  app.broadcast(
+                    new message.UpdateConsoleMessage({
+                      machineState: machine.state,
+                      results: results
+                    }).toJson()
+                  );
 
-                              logEvents.forEach(logEvent => {
-                                var message = JSON.parse(logEvent.message);
-                                results.push({
-                                  timestamp: logEvent.timestamp,
-                                  statement: message.statement,
-                                  events: message.event
-                                });
-                              });
-
-                              machine.state = MachineState.Finished;
-                              app.broadcast(
-                                new message.UpdateConsoleMessage({
-                                  machineState: machine.state,
-                                  results: results
-                                }).toJson()
-                              );
-                            }
-                          );
-                        });
-                      },
-                      err => {
-                        console.log(err);
-                      }
-                    );
-                },
-                err => {
-                  console.log(err);
+                  ws.send(new message.ShutdownMessage().toJson());
                 }
               );
-          });
+            },
+            err => {
+              console.log(err);
+              destroyInstance('benchmarking', err => {
+                if (err) {
+                  console.log(err);
+                }
+              });
+            }
+          );
           break;
       }
     } catch (err) {
@@ -188,14 +177,10 @@ wss.on('connection', (ws, req) => {
   ws.on('close', (code, reason) => {
     console.log('[WebSocket] Connection closed: ' + code + ' ' + reason);
     if (machine) {
-      console.log('[Vagrant] Destroy machine');
-      machine.destroy((err, out) => {
+      destroyInstance('benchmarking', err => {
         if (err) {
-          throw new Error(err);
+          console.log(err);
         }
-
-        console.log(out);
-        machine = null;
       });
     }
   });
@@ -212,18 +197,13 @@ function cleanup() {
     wss.close();
   }
 
-  if (machine) {
-    machine.destroy((err, out) => {
-      if (err) {
-        throw new Error(err);
-      }
-
-      console.log(out);
-      machine = null;
-    });
-  }
-
   process.exit();
+
+  destroyInstance('benchmarking', err => {
+    if (err) {
+      console.log(err);
+    }
+  });
 }
 
 process.on('SIGINT', cleanup);

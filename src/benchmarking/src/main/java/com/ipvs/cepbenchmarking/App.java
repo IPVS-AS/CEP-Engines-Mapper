@@ -69,7 +69,7 @@ public class App {
             e.printStackTrace();
         }
         webSocket.close();
-        countDownLatch.countDown();
+        System.exit(0);
     }
 
     private void setupCepEngine(SetupCepEngineMessage message) {

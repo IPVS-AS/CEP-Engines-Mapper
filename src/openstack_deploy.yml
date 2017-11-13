@@ -1,0 +1,88 @@
+- name: Deploy and provision Openstack instance
+  hosts: localhost
+  tasks:
+    - name: Create OpenStack keypair
+      os_keypair:
+        auth:
+          auth_url: http://129.69.209.131:5000/v2.0
+          username: nahralo
+          password: 84237610
+          project_name: IoTMonitoring
+        name: "{{instance_name}}"
+      register: keypair
+
+    - name: Store public key
+      copy:
+        content: "{{keypair.key.public_key}}"
+        dest: ~/.ssh/{{keypair.key.name}}.pub
+
+    - name: Store private key
+      copy:
+        content: "{{keypair.key.private_key}}"
+        dest: ~/.ssh/{{keypair.key.name}}
+        mode: 0600
+
+    - name: Launch OpenStack instance
+      os_server:
+        auth:
+          auth_url: http://129.69.209.131:5000/v2.0
+          username: nahralo
+          password: 84237610
+          project_name: IoTMonitoring
+        name: "{{instance_name}}"
+        key_name: "{{instance_name}}"
+        image: ubuntu-16.04-server-cloudimg-amd64
+        flavor: m1.medium
+        floating_ip_pools: float
+        security_groups: default
+      register: instance
+
+    - name: Add instance to inventory
+      add_host:
+        name: "{{instance_name}}"
+        groups: openstack
+        ansible_host: "{{instance.server.public_v4}}"
+        ansible_user: ubuntu
+        ansible_become: true
+        ansible_ssh_private_key_file: ~/.ssh/{{keypair.key.name}}
+
+    - name: Wait for instance
+      wait_for:
+        host: "{{instance.server.public_v4}}"
+        port: 22
+        delay: 10
+        timeout: 500
+
+    - name: Accept new ssh fingerprints
+      shell: ssh-keyscan -H "{{instance.server.public_v4}}" >> ~/.ssh/known_hosts
+
+
+- name: Connect to instance
+  hosts: "{{instance_name}}"
+  tasks:
+    - name: Install dependencies
+      apt:
+        name: "{{item}}"
+        update_cache: yes
+      with_items:
+        - default-jre
+        - default-jdk
+        - maven
+
+    - name: Copy files to instance
+      copy:
+        src: ./benchmarking/
+        dest: /home/ubuntu/
+
+    - name: Compile benchmarking application
+      command: mvn clean package
+      args:
+        chdir: /home/ubuntu
+
+    - name: Start benchmark
+      command: mvn exec:exec
+      args:
+        chdir: /home/ubuntu
+
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"

@@ -1,0 +1,39 @@
+- hosts: localhost
+  tasks:
+    - name: Get instance facts
+      os_server_facts:
+        auth:
+          auth_url: http://129.69.209.131:5000/v2.0
+          username: nahralo
+          password: 84237610
+          project_name: IoTMonitoring
+        server: "{{instance_name}}"
+      register: servers
+
+    - debug:
+        var: servers
+
+    - name: Add instance to inventory
+      add_host:
+        name: "{{instance_name}}"
+        groups: openstack
+        ansible_host: "{{servers.ansible_facts.openstack_servers[0].public_v4}}"
+        ansible_user: ubuntu
+        ansible_become: true
+        ansible_ssh_private_key_file: ~/.ssh/{{instance_name}}
+
+- name: Connect to instance
+  hosts: "{{instance_name}}"
+  tasks:
+    - name: Get benchmarking log
+      fetch:
+        src: /root/benchmark.log
+        dest: ./logs/
+        flat: yes
+      register: file
+
+    - debug:
+        var: file
+
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"
