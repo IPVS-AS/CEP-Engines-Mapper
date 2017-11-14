@@ -7,6 +7,7 @@ var Ansible = require('node-ansible');
 var temperature = require('./temperature');
 var message = require('./message');
 var App = require('./app');
+var ip = require('ip');
 
 var app = null;
 var machine = {};
@@ -17,11 +18,14 @@ const MachineState = {
   Finished: 'Finished'
 };
 
-function newBenchmark(config) {
+function createInstance(config) {
   machine.config = config;
   machine.playbook = new Ansible.Playbook()
     .playbook('openstack_deploy')
-    .variables({ instance_name: 'benchmarking' });
+    .variables({
+      instance_name: 'benchmarking',
+      host_ip_address: ip.address()
+    });
 
   machine.playbook.on('stdout', data => {
     console.log(data.toString());
@@ -85,7 +89,7 @@ wss.on('listening', () => {
       var incomingMessage = message.Message.fromJson(data);
       switch (incomingMessage.header.type) {
         case message.Constants.SetupCepEngine:
-          newBenchmark(incomingMessage);
+          createInstance(incomingMessage);
           break;
       }
     } catch (err) {

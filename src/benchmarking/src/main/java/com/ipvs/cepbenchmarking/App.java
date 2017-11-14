@@ -31,9 +31,9 @@ public class App {
     public App() throws Exception {
         countDownLatch = new CountDownLatch(1);
 
-        String vagrantHostIp = Configuration.INSTANCE.getVagrantHostIp();
+        String hostIpAddress = Configuration.INSTANCE.getHostIpAddress();
 
-        webSocket = new WebSocket("ws://" + vagrantHostIp + ":8080");
+        webSocket = new WebSocket("ws://" + hostIpAddress + ":8080");
 
         webSocket.setMessageHandler(new WebSocket.MessageHandler() {
             public void handleMessage(String message) {

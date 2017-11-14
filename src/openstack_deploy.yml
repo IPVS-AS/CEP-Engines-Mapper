@@ -86,3 +86,6 @@
 
   vars:
     ansible_python_interpreter: "/usr/bin/python3"
+
+  environment:
+    HOST_IP_ADDRESS: "{{host_ip_address}}"
