@@ -71,7 +71,7 @@
 
     - name: Copy files to instance
       copy:
-        src: ./benchmarking/
+        src: ../benchmarking/
         dest: /home/ubuntu/
 
     - name: Compile benchmarking application

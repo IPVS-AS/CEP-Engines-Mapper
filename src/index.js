@@ -4,6 +4,7 @@ var WebSocket = require('ws');
 var node_ssh = require('node-ssh');
 var ssh = new node_ssh();
 var Ansible = require('node-ansible');
+var Openstack = require('./openstack');
 var temperature = require('./temperature');
 var message = require('./message');
 var App = require('./app');
@@ -21,7 +22,7 @@ const MachineState = {
 function createInstance(config) {
   machine.config = config;
   machine.playbook = new Ansible.Playbook()
-    .playbook('openstack_deploy')
+    .playbook(Openstack.Deploy)
     .variables({
       instance_name: 'benchmarking',
       host_ip_address: ip.address()
@@ -53,7 +54,7 @@ function createInstance(config) {
 function destroyInstance(instanceName, callback) {
   machine = {};
   var playbook = new Ansible.Playbook()
-    .playbook('openstack_destroy')
+    .playbook(Openstack.Destroy)
     .variables({ instance_name: instanceName });
 
   playbook.on('stdout', data => {
@@ -121,7 +122,7 @@ wss.on('connection', (ws, req) => {
           break;
         case message.Constants.BenchmarkEnd:
           var getlog = new Ansible.Playbook()
-            .playbook('openstack_getlog')
+            .playbook(Openstack.GetLog)
             .variables({ instance_name: 'benchmarking' });
 
           getlog.exec().then(
@@ -201,12 +202,12 @@ function cleanup() {
     wss.close();
   }
 
-  process.exit();
-
   destroyInstance('benchmarking', err => {
     if (err) {
       console.log(err);
     }
+
+    process.exit();
   });
 }
 

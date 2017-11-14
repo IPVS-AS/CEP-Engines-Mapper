@@ -28,7 +28,7 @@
     - name: Get benchmarking log
       fetch:
         src: /root/benchmark.log
-        dest: ./logs/
+        dest: ../logs/
         flat: yes
       register: file
 
