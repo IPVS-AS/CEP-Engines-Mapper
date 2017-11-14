@@ -1,10 +1,10 @@
 Vagrant.configure("2") do |config|
   config.ssh.username = "ubuntu"
 
-  config.vm.provision :shell, path: "install_vagrant.sh"
+  config.vm.provision :shell, path: "install_ansible.sh"
   config.vm.provision :shell, path: "install_node.sh", privileged: false
 
-  config.vm.provider :openstack do |os|
+  config.vm.provider :openstack do |os, override|
       os.openstack_auth_url = "http://129.69.209.131:5000/v2.0/tokens"
       os.username = "nahralo"
       os.password = "84237610"
@@ -15,5 +15,8 @@ Vagrant.configure("2") do |config|
       os.image = "ubuntu-16.04-server-cloudimg-amd64"
       os.floating_ip = "192.168.209.186"
       os.security_groups = ["default"]
+
+      override.vm.synced_folder '.', '/vagrant', type: 'rsync',
+        rsync__exclude: ['node_modules']
   end
 end

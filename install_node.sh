@@ -9,5 +9,4 @@ nvm use node
 
 
 # change to /vagrant on ssh
-vagrant plugin install vagrant-openstack-provider
 echo "cd /vagrant" >> $HOME/.bashrc
