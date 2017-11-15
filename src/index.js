@@ -3,77 +3,13 @@ var path = require('path');
 var WebSocket = require('ws');
 var node_ssh = require('node-ssh');
 var ssh = new node_ssh();
-var Ansible = require('node-ansible');
 var Openstack = require('./openstack');
 var temperature = require('./temperature');
 var message = require('./message');
 var App = require('./app');
-var ip = require('ip');
 
 var app = null;
-var machine = {};
-
-const MachineState = {
-  Provisioning: 'Provisioning',
-  Benchmarking: 'Benchmarking',
-  Finished: 'Finished'
-};
-
-function createInstance(config) {
-  machine.config = config;
-  machine.playbook = new Ansible.Playbook()
-    .playbook(Openstack.Deploy)
-    .variables({
-      instance_name: 'benchmarking',
-      host_ip_address: ip.address()
-    });
-
-  machine.playbook.on('stdout', data => {
-    console.log(data.toString());
-  });
-
-  machine.playbook.on('stderr', data => {
-    console.log(data.toString());
-  });
-
-  machine.state = MachineState.Provisioning;
-  app.broadcast(
-    new message.UpdateConsoleMessage({ machineState: machine.state }).toJson()
-  );
-
-  machine.playbook.exec().then(
-    () => {
-      console.log('success');
-    },
-    err => {
-      console.log(err);
-    }
-  );
-}
-
-function destroyInstance(instanceName, callback) {
-  machine = {};
-  var playbook = new Ansible.Playbook()
-    .playbook(Openstack.Destroy)
-    .variables({ instance_name: instanceName });
-
-  playbook.on('stdout', data => {
-    console.log(data.toString());
-  });
-
-  playbook.on('stderr', data => {
-    console.log(data.toString());
-  });
-
-  playbook.exec().then(
-    () => {
-      callback(null);
-    },
-    err => {
-      callback(err);
-    }
-  );
-}
+var instance = null;
 
 var wss = new WebSocket.Server({ port: 8080 });
 
@@ -90,7 +26,59 @@ wss.on('listening', () => {
       var incomingMessage = message.Message.fromJson(data);
       switch (incomingMessage.header.type) {
         case message.Constants.SetupCepEngine:
-          createInstance(incomingMessage);
+          instance = new Openstack.Instance(incomingMessage);
+
+          instance.on('changeState', state => {
+            app.broadcast(
+              new message.UpdateConsoleMessage({
+                machineState: state
+              }).toJson()
+            );
+
+            switch (state) {
+              case Openstack.Constants.State.Finished:
+                fs.readFile(
+                  path.join(__dirname, 'logs/benchmark.log'),
+                  (err, data) => {
+                    if (err) {
+                      console.log(err);
+                    }
+
+                    var logEvents = data
+                      .toString()
+                      .split('\n')
+                      .filter(x => x)
+                      .map(JSON.parse);
+
+                    var results = [];
+
+                    logEvents.forEach(logEvent => {
+                      var message = JSON.parse(logEvent.message);
+                      results.push({
+                        timestamp: logEvent.timestamp,
+                        statement: message.statement,
+                        events: message.event
+                      });
+                    });
+
+                    app.broadcast(
+                      new message.UpdateConsoleMessage({
+                        machineState: state,
+                        results: results
+                      }).toJson()
+                    );
+                  }
+                );
+                break;
+            }
+          });
+
+          instance.create(
+            () => {},
+            err => {
+              console.log(err);
+            }
+          );
           break;
       }
     } catch (err) {
@@ -112,66 +100,11 @@ wss.on('connection', (ws, req) => {
       var incomingMessage = message.Message.fromJson(data);
       switch (incomingMessage.header.type) {
         case message.Constants.CepEngineReady:
-          machine.state = MachineState.Benchmarking;
-          app.broadcast(
-            new message.UpdateConsoleMessage({
-              machineState: machine.state
-            }).toJson()
-          );
-          temperature.start(200);
+          instance.changeState(Openstack.Constants.State.Benchmarking);
+          temperature.start(50);
           break;
         case message.Constants.BenchmarkEnd:
-          var getlog = new Ansible.Playbook()
-            .playbook(Openstack.GetLog)
-            .variables({ instance_name: 'benchmarking' });
-
-          getlog.exec().then(
-            () => {
-              fs.readFile(
-                path.join(__dirname, 'logs/benchmark.log'),
-                (err, data) => {
-                  if (err) {
-                    console.log(err);
-                  }
-
-                  var logEvents = data
-                    .toString()
-                    .split('\n')
-                    .filter(x => x)
-                    .map(JSON.parse);
-
-                  var results = [];
-
-                  logEvents.forEach(logEvent => {
-                    var message = JSON.parse(logEvent.message);
-                    results.push({
-                      timestamp: logEvent.timestamp,
-                      statement: message.statement,
-                      events: message.event
-                    });
-                  });
-
-                  machine.state = MachineState.Finished;
-                  app.broadcast(
-                    new message.UpdateConsoleMessage({
-                      machineState: machine.state,
-                      results: results
-                    }).toJson()
-                  );
-
-                  ws.send(new message.ShutdownMessage().toJson());
-                }
-              );
-            },
-            err => {
-              console.log(err);
-              destroyInstance('benchmarking', err => {
-                if (err) {
-                  console.log(err);
-                }
-              });
-            }
-          );
+          ws.send(new message.ShutdownMessage().toJson());
           break;
       }
     } catch (err) {
@@ -181,16 +114,9 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', (code, reason) => {
     console.log('[WebSocket] Connection closed: ' + code + ' ' + reason);
-    if (machine) {
-      destroyInstance('benchmarking', err => {
-        if (err) {
-          console.log(err);
-        }
-      });
-    }
   });
 
-  ws.send(machine.config.toJson());
+  ws.send(instance.config.toJson());
 });
 
 process.stdin.resume();
@@ -202,13 +128,18 @@ function cleanup() {
     wss.close();
   }
 
-  destroyInstance('benchmarking', err => {
-    if (err) {
-      console.log(err);
-    }
-
+  if (instance) {
+    instance.destroy(
+      () => {
+        process.exit();
+      },
+      err => {
+        process.exit();
+      }
+    );
+  } else {
     process.exit();
-  });
+  }
 }
 
 process.on('SIGINT', cleanup);

@@ -1,3 +1,2 @@
-exports.Deploy = "openstack/deploy";
-exports.Destroy = "openstack/destroy";
-exports.GetLog = "openstack/getlog";
+exports.Instance = require('./instance');
+exports.Constants = require('./constants');
