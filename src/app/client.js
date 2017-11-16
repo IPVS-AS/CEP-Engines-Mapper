@@ -1,5 +1,7 @@
 'use strict';
 
+require('purecss');
+
 var Elm = require('./Main.elm');
 var mount = document.getElementById('main');
 
