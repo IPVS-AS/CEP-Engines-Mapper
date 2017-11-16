@@ -25,10 +25,15 @@
 - name: Connect to instance
   hosts: "{{instance_name}}"
   tasks:
+    - name: Create logs directory
+      file:
+        path: ./logs
+        state: directory
+
     - name: Get benchmarking log
       fetch:
         src: /root/benchmark.log
-        dest: ../logs/
+        dest: ./logs/{{instance_name}}.log
         flat: yes
       register: file
 

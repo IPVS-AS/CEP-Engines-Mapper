@@ -1,3 +1,5 @@
+var fs = require('fs');
+var path = require('path');
 var ip = require('ip');
 var EventEmitter = require('events');
 var Playbook = require('node-ansible').Playbook;
@@ -9,6 +11,7 @@ class Instance extends EventEmitter {
     this.config = config;
     this.name = Instance.generateName();
     this.state = Constants.State.Created;
+    this.results = [];
   }
 
   runPlaybook(action, success, fail) {
@@ -43,8 +46,18 @@ class Instance extends EventEmitter {
       () => {
         this.getLog(
           () => {
-            this.changeState(Constants.State.Finished);
-            this.destroy();
+            this.getResults(
+              results => {
+                this.results = results;
+                this.changeState(Constants.State.Finished);
+                this.emit('finished', results);
+                this.destroy();
+              },
+              err => {
+                this.destroy();
+                fail(err);
+              }
+            );
           },
           err => {
             this.destroy();
@@ -57,7 +70,14 @@ class Instance extends EventEmitter {
   }
 
   destroy(success, fail) {
-    this.runPlaybook(Constants.Action.Destroy, success, fail);
+    this.runPlaybook(
+      Constants.Action.Destroy,
+      () => {
+        this.emit('destroyed');
+        success();
+      },
+      fail
+    );
   }
 
   getLog(success, fail) {
@@ -67,6 +87,36 @@ class Instance extends EventEmitter {
   changeState(state) {
     this.state = state;
     this.emit('changeState', state);
+  }
+
+  getResults(success, fail) {
+    fs.readFile(
+      path.join(__dirname, 'logs/' + this.name + '.log'),
+      (err, data) => {
+        if (err) {
+          return fail(err);
+        }
+
+        var logEvents = data
+          .toString()
+          .split('\n')
+          .filter(x => x)
+          .map(JSON.parse);
+
+        var results = [];
+
+        logEvents.forEach(logEvent => {
+          var message = JSON.parse(logEvent.message);
+          results.push({
+            timestamp: logEvent.timestamp,
+            statement: message.statement,
+            events: message.event
+          });
+        });
+
+        success(results);
+      }
+    );
   }
 
   static generateName() {

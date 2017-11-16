@@ -1,5 +1,3 @@
-var fs = require('fs');
-var path = require('path');
 var WebSocket = require('ws');
 var node_ssh = require('node-ssh');
 var ssh = new node_ssh();
@@ -34,43 +32,19 @@ wss.on('listening', () => {
                 machineState: state
               }).toJson()
             );
+          });
 
-            switch (state) {
-              case Openstack.Constants.State.Finished:
-                fs.readFile(
-                  path.join(__dirname, 'logs/benchmark.log'),
-                  (err, data) => {
-                    if (err) {
-                      console.log(err);
-                    }
+          instance.on('finished', results => {
+            app.broadcast(
+              new message.UpdateConsoleMessage({
+                machineState: instance.state,
+                results: results
+              }).toJson()
+            );
+          });
 
-                    var logEvents = data
-                      .toString()
-                      .split('\n')
-                      .filter(x => x)
-                      .map(JSON.parse);
-
-                    var results = [];
-
-                    logEvents.forEach(logEvent => {
-                      var message = JSON.parse(logEvent.message);
-                      results.push({
-                        timestamp: logEvent.timestamp,
-                        statement: message.statement,
-                        events: message.event
-                      });
-                    });
-
-                    app.broadcast(
-                      new message.UpdateConsoleMessage({
-                        machineState: state,
-                        results: results
-                      }).toJson()
-                    );
-                  }
-                );
-                break;
-            }
+          instance.on('destroyed', () => {
+            instance = null;
           });
 
           instance.create(
