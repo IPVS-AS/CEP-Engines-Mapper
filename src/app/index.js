@@ -1,19 +1,12 @@
-require('babel-register');
-var React = require('react');
-var ReactDOMServer = require('react-dom/server');
 var express = require('express');
 var http = require('http');
 var WebSocket = require('ws');
 var EventEmitter = require('events');
-var bodyParser = require('body-parser');
-var Server = React.createFactory(require('./server').default);
 
 class App extends EventEmitter {
   constructor(port) {
     super();
     var app = express();
-
-    app.use(bodyParser.json());
 
     if (process.env.NODE_ENV === 'development') {
       var webpack = require('webpack');
@@ -23,6 +16,7 @@ class App extends EventEmitter {
 
       app.use(
         require('webpack-dev-middleware')(compiler, {
+          publicPath: '/static/',
           hot: true,
           stats: {
             colors: true
@@ -39,33 +33,8 @@ class App extends EventEmitter {
       app.use('/static', express.static(__dirname + '/static'));
     }
 
-    var template = body => {
-      return `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>CEP Engine Benchmarking</title>
-          </head>
-
-          <body>
-            <div id="root">${body}</div>
-          </body>
-
-          <script src="/static/bundle.js"></script>
-        </html>
-      `;
-    };
-
-    app.get('*', (req, res) => {
-      var context = {};
-      var markup = ReactDOMServer.renderToString(
-        Server({
-          location: req.url,
-          context: context,
-          userAgent: req.headers['user-agent']
-        })
-      );
-      res.send(template(markup));
+    app.get('/', (req, res) => {
+      res.sendFile(__dirname + '/static/client.html');
     });
 
     var server = http.createServer(app);

@@ -1,6 +1,7 @@
 target/
 .vagrant/
 node_modules/
+elm-stuff/
 *.log
-bundle.js
+app.js
 *.retry

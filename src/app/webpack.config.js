@@ -7,31 +7,27 @@ var plugins = [];
 if (process.env.NODE_ENV === 'development') {
   entry = [
     'webpack-hot-middleware/client?reload=true',
-    'react-hot-loader/patch',
     __dirname + '/client.js'
   ];
   plugins.push(new webpack.HotModuleReplacementPlugin());
 }
 
-module.exports = [
-  {
-    entry: entry,
-    output: {
-      path: __dirname + '/static',
-      publicPath: '/static/',
-      filename: 'bundle.js'
-    },
-    module: {
-      loaders: [
-        {
-          test: /\.js[x]?$/,
-          loader: 'babel-loader'
-        }
-      ]
-    },
-    resolve: {
-      extensions: ['.js', '.jsx']
-    },
-    plugins: plugins
-  }
-];
+module.exports = {
+  entry: entry,
+  output: {
+    path: __dirname + '/static',
+    publicPath: '/static/',
+    filename: 'app.js'
+  },
+  module: {
+    rules: [
+      {
+        test: /\.elm$/,
+        exclude: [/elm-stuff/, /node_modules/],
+        loader: 'elm-webpack-loader?verbose=true&warn=true'
+      }
+    ],
+    noParse: /\.elm$/
+  },
+  plugins: plugins
+};
