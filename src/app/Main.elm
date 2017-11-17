@@ -97,6 +97,9 @@ type Msg
   | AddEvent
   | AddEventProperty Int
   | AddStatement
+  | RemoveEvent Int
+  | RemoveEventProperty Int Int
+  | RemoveStatement Int
   | UpdateEventName Int String
   | UpdateEventPropertyName Int Int String
   | UpdateEventPropertyType Int Int String
@@ -160,6 +163,45 @@ update msg model =
             | statementId = model.statementId + 1
             , statements = model.statements ++ [ new model.statementId ]
         }
+          ! []
+
+    RemoveEvent id ->
+      let
+        remove event =
+          if event.id == id then
+            False
+          else
+            True
+      in
+        { model | events = List.filter remove model.events }
+          ! []
+
+    RemoveEventProperty eventId propId ->
+      let
+        removeProp property =
+          if property.id == propId then
+            False
+          else
+            True
+
+        remove event =
+          if event.id == eventId then
+            { event | properties = List.filter removeProp event.properties }
+          else
+            event
+      in
+        { model | events = List.map remove model.events }
+          ! []
+
+    RemoveStatement id ->
+      let
+        remove statement =
+          if statement.id == id then
+            False
+          else
+            True
+      in
+        { model | statements = List.filter remove model.statements }
           ! []
 
     UpdateEventName id name ->
@@ -258,6 +300,8 @@ viewEvent event =
         , onInput (UpdateEventName event.id)
         ] []
     , viewEventProperties event.id event.properties
+    , button [ type_ "button", onClick (RemoveEvent event.id) ]
+        [ text "Remove Event" ]
     , button [ type_ "button", onClick (AddEventProperty event.id) ]
         [ text "Add Event Property" ]
     ]
@@ -281,6 +325,10 @@ viewEventProperty eventId property =
             [ value property.propType
             , onInput (UpdateEventPropertyType eventId property.id)
             ] []
+        , button
+            [ type_ "button"
+            , onClick (RemoveEventProperty eventId property.id)
+            ] [ text "Remove Property" ]
         ]
     ]
 
@@ -303,5 +351,7 @@ viewStatement statement =
             [ value statement.query
             , onInput (UpdateStatementQuery statement.id)
             ] []
+        , button [ type_ "button", onClick (RemoveStatement statement.id) ]
+            [ text "Remove Statement" ]
         ]
     ]
