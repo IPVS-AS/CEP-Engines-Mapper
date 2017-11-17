@@ -1,6 +1,6 @@
-import Html exposing (Html, fieldset, form, input, textarea, li, ul)
-import Html.Attributes exposing (class, value)
-import Html.Events exposing (onInput)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 
 
 main : Program Never Model Msg
@@ -94,6 +94,9 @@ warningStatement =
 type Msg
   = MqttBroker String
   | EndEventName String
+  | AddEvent
+  | AddEventProperty Int
+  | AddStatement
   | UpdateEventName Int String
   | UpdateEventPropertyName Int Int String
   | UpdateEventPropertyType Int Int String
@@ -109,6 +112,55 @@ update msg model =
 
     EndEventName endEventName ->
       { model | endEventName = endEventName } ! []
+
+    AddEvent ->
+      let
+        new id =
+          { id = id
+          , name = ""
+          , properties = []
+          , propertyId = 0
+          }
+      in
+        { model
+            | eventId = model.eventId + 1
+            , events = model.events ++ [ new model.eventId ]
+        }
+          ! []
+
+    AddEventProperty id ->
+      let
+        new id =
+          { id = id
+          , name = ""
+          , propType = ""
+          }
+
+        addEventProp event =
+          if event.id == id then
+            { event
+                | propertyId = event.propertyId + 1
+                , properties = event.properties ++ [ new event.propertyId ]
+            }
+          else
+            event
+      in
+        { model | events = List.map addEventProp model.events }
+          ! []
+
+    AddStatement ->
+      let
+        new id =
+          { id = id
+          , name = ""
+          , query = ""
+          }
+      in
+        { model
+            | statementId = model.statementId + 1
+            , statements = model.statements ++ [ new model.statementId ]
+        }
+          ! []
 
     UpdateEventName id name ->
       let
@@ -182,9 +234,11 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-  form [ class "pure-form" ]
+  Html.form [ class "pure-form" ]
     [ input [ value model.mqttBroker, onInput MqttBroker ] []
     , input [ value model.endEventName, onInput EndEventName ] []
+    , button [ type_ "button", onClick AddEvent ] [ text "Add Event" ]
+    , button [ type_ "button", onClick AddStatement ] [ text "Add Statement" ]
     , viewEvents model.events
     , viewStatements model.statements
     ]
@@ -204,6 +258,8 @@ viewEvent event =
         , onInput (UpdateEventName event.id)
         ] []
     , viewEventProperties event.id event.properties
+    , button [ type_ "button", onClick (AddEventProperty event.id) ]
+        [ text "Add Event Property" ]
     ]
 
 
@@ -227,7 +283,6 @@ viewEventProperty eventId property =
             ] []
         ]
     ]
-
 
 
 viewStatements : List Statement -> Html Msg
