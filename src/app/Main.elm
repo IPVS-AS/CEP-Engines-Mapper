@@ -1,7 +1,7 @@
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-
+import Json.Decode
 
 main : Program Never Model Msg
 main =
@@ -136,7 +136,7 @@ update msg model =
         new id =
           { id = id
           , name = ""
-          , propType = ""
+          , propType = "int"
           }
 
         addEventProp event =
@@ -315,22 +315,46 @@ viewEventProperties eventId properties =
 
 viewEventProperty : Int -> EventProperty -> Html Msg
 viewEventProperty eventId property =
-  li []
-    [ fieldset [ class "pure-group" ]
-        [ input
-            [ value property.name
-            , onInput (UpdateEventPropertyName eventId property.id)
-            ] []
-        , input
-            [ value property.propType
-            , onInput (UpdateEventPropertyType eventId property.id)
-            ] []
-        , button
-            [ type_ "button"
-            , onClick (RemoveEventProperty eventId property.id)
-            ] [ text "Remove Property" ]
-        ]
-    ]
+  let
+    propTypes =
+      [ "string"
+      , "int"
+      , "long"
+      , "boolean"
+      , "double"
+      , "float"
+      , "short"
+      , "char"
+      , "byte"
+      ]
+
+    options =
+      let
+        typeOption propType =
+          if property.propType == propType then
+            option [ selected True ] [ text propType ]
+          else
+            option [] [ text propType ]
+      in
+        List.map typeOption propTypes
+
+    decode =
+      Json.Decode.map (UpdateEventPropertyType eventId property.id) targetValue
+  in
+    li []
+      [ fieldset [ class "pure-group" ]
+          [ input
+              [ value property.name
+              , onInput (UpdateEventPropertyName eventId property.id)
+              ] []
+          , select [ attribute "value" property.propType, on "change" decode ]
+              options
+          , button
+              [ type_ "button"
+              , onClick (RemoveEventProperty eventId property.id)
+              ] [ text "Remove Property" ]
+          ]
+      ]
 
 
 viewStatements : List Statement -> Html Msg
