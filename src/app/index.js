@@ -1,40 +1,29 @@
+var fs = require('fs');
+var ip = require('ip');
 var express = require('express');
 var http = require('http');
 var WebSocket = require('ws');
 var EventEmitter = require('events');
+var config = require('config');
 
 class App extends EventEmitter {
   constructor(port) {
     super();
     var app = express();
 
-    if (process.env.NODE_ENV === 'development') {
-      var webpack = require('webpack');
-      var webpackConfig = require('./webpack.config');
+    app.use('/static', express.static(__dirname + '/static'));
 
-      var compiler = webpack(webpackConfig);
+    fs.readFile(__dirname + '/static/client.html', (err, data) => {
+      if (err) {
+        console.log(err);
+      }
 
-      app.use(
-        require('webpack-dev-middleware')(compiler, {
-          publicPath: '/static/',
-          hot: true,
-          stats: {
-            colors: true
-          }
-        })
-      );
+      var server = 'ws://' + config.get('server_ip') + ':' + port;
+      var html = data.toString().replace(/data-address/, '$&="' + server + '"');
 
-      app.use(require('webpack-hot-middleware')(compiler));
-
-      app.get('/static/style.css', (req, res) => {
-        res.sendFile(__dirname + '/static/style.css');
+      app.get('/', (req, res) => {
+        res.send(html);
       });
-    } else {
-      app.use('/static', express.static(__dirname + '/static'));
-    }
-
-    app.get('/', (req, res) => {
-      res.sendFile(__dirname + '/static/client.html');
     });
 
     var server = http.createServer(app);

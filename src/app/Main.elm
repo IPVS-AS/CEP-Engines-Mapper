@@ -2,11 +2,13 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode
+import Json.Encode as Encode exposing (Value)
+import WebSocket
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-  Html.program
-    { init = (model, Cmd.none)
+  Html.programWithFlags
+    { init = init
     , view = view
     , update = update
     , subscriptions = subscriptions
@@ -17,13 +19,19 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.none
+  WebSocket.listen model.server Receive
 
 
 -- MODEL
 
+type alias Flags =
+  { server : String
+  }
+
+
 type alias Model =
-  { mqttBroker : String
+  { server : String
+  , mqttBroker : String
   , endEventName : String
   , events : List Event
   , eventId : Int
@@ -54,15 +62,17 @@ type alias Statement =
   }
 
 
-model : Model
-model =
-  { mqttBroker = "tcp://10.0.14.106:1883"
+init : Flags -> (Model, Cmd msg)
+init flags =
+  { server = flags.server
+  , mqttBroker = "tcp://10.0.14.106:1883"
   , endEventName = "TemperatureEndEvent"
   , events = [ temperatureEvent ]
   , eventId = 1
   , statements = [ warningStatement ]
   , statementId = 1
   }
+    ! []
 
 
 temperatureEvent : Event
@@ -105,6 +115,8 @@ type Msg
   | UpdateEventPropertyType Int Int String
   | UpdateStatementName Int String
   | UpdateStatementQuery Int String
+  | StartBenchmark
+  | Receive String
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -271,6 +283,81 @@ update msg model =
         { model | statements = List.map updateQuery model.statements }
           ! []
 
+    StartBenchmark ->
+      model
+        ! [ WebSocket.send model.server (encodeSetupMessage model) ]
+
+    Receive message ->
+      let
+        debug =
+          message |> Debug.log "msg"
+      in
+        model ! []
+
+
+-- ENCODE
+
+encodeSetupMessage : Model -> String
+encodeSetupMessage model =
+  let
+    header =
+      Encode.object <|
+        [ ("version", Encode.string "0.1.0")
+        , ("type", Encode.string "SetupCepEngine")
+        ]
+
+    payload =
+      Encode.object <|
+        [ ("broker", Encode.string model.mqttBroker)
+        , ("endEventName", Encode.string model.endEventName)
+        , ("events", encodeEvents model.events)
+        , ("statements", encodeStatements model.statements)
+        ]
+  in
+    Encode.encode 0 << Encode.object <|
+      [ ("header", header)
+      , ("payload", payload)
+      ]
+
+
+encodeEvents : List Event -> Value
+encodeEvents events =
+  let
+    encode event =
+      Encode.object <|
+        [ ("name", Encode.string event.name)
+        , ("properties", encodeEventProperties event.properties)
+        ]
+  in
+    Encode.list <|
+      List.map encode events
+
+
+encodeEventProperties : List EventProperty -> Value
+encodeEventProperties properties =
+  let
+    encode property =
+      Encode.object <|
+        [ ("name", Encode.string property.name)
+        , ("type", Encode.string property.propType)
+        ]
+  in
+    Encode.list <|
+      List.map encode properties
+
+
+encodeStatements : List Statement -> Value
+encodeStatements statements =
+  let
+    encode statement =
+      Encode.object <|
+        [ ("name", Encode.string statement.name)
+        , ("query", Encode.string statement.query)
+        ]
+  in
+    Encode.list <|
+      List.map encode statements
+
 
 -- VIEW
 
@@ -283,6 +370,10 @@ view model =
     , button [ type_ "button", onClick AddStatement ] [ text "Add Statement" ]
     , viewEvents model.events
     , viewStatements model.statements
+    , text model.server
+    , text (encodeSetupMessage model)
+    , button [ type_ "button", onClick StartBenchmark ]
+        [ text "Start Benchmark" ]
     ]
 
 

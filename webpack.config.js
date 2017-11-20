@@ -1,21 +1,9 @@
 var webpack = require('webpack');
-var path = require('path');
-
-var entry = __dirname + '/client.js';
-var plugins = [];
-
-if (process.env.NODE_ENV === 'development') {
-  entry = [
-    'webpack-hot-middleware/client?reload=true',
-    __dirname + '/client.js'
-  ];
-  plugins.push(new webpack.HotModuleReplacementPlugin());
-}
 
 module.exports = {
-  entry: entry,
+  entry: __dirname + '/src/app/client.js',
   output: {
-    path: __dirname + '/static',
+    path: __dirname + '/src/app/static',
     publicPath: '/static/',
     filename: 'app.js'
   },
@@ -32,6 +20,5 @@ module.exports = {
       }
     ],
     noParse: /\.elm$/
-  },
-  plugins: plugins
+  }
 };

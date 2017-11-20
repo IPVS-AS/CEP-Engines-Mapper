@@ -17,6 +17,6 @@ Vagrant.configure("2") do |config|
       os.security_groups = ["default"]
 
       override.vm.synced_folder '.', '/vagrant', type: 'rsync',
-        rsync__exclude: ['node_modules']
+        rsync__exclude: ['node_modules', 'elm-stuff']
   end
 end

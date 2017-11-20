@@ -5,3 +5,4 @@ elm-stuff/
 *.log
 app.js
 *.retry
+config.json
