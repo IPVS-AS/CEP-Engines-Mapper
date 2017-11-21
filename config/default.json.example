@@ -1,0 +1,10 @@
+{
+  "server": {
+    "ip": "192.168.209.186",
+    "wss_port": 8080
+  },
+  "app": {
+    "port": 3000
+  },
+  "temperature_samples": 50
+}

@@ -1,3 +1,4 @@
+var config = require('config');
 var WebSocket = require('ws');
 var node_ssh = require('node-ssh');
 var ssh = new node_ssh();
@@ -9,12 +10,13 @@ var App = require('./app');
 var app = null;
 var instance = null;
 
-var wss = new WebSocket.Server({ port: 8080 });
+var wss_port = config.get('server.wss_port');
+var wss = new WebSocket.Server({ port: wss_port });
 
 wss.on('listening', () => {
-  console.log('[WebSocketServer] Started listening on port 8080');
+  console.log('[WebSocketServer] Started listening on port ' + wss_port);
 
-  app = new App(3000);
+  app = new App(config.get('app.port'));
 
   app.on('message', data => {
     console.log('[App] Received message');
@@ -75,7 +77,7 @@ wss.on('connection', (ws, req) => {
       switch (incomingMessage.header.type) {
         case message.Constants.CepEngineReady:
           instance.changeState(Openstack.Constants.State.Benchmarking);
-          temperature.start(50);
+          temperature.start(config.get('temperature_samples'));
           break;
         case message.Constants.BenchmarkEnd:
           ws.send(new message.ShutdownMessage().toJson());

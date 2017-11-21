@@ -2,7 +2,7 @@
 
 require('purecss');
 
-var Elm = require('./Main.elm');
+var Elm = require('./elm/Main.elm');
 var mount = document.getElementById('main');
 var server = document.getElementById('server');
 

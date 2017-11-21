@@ -6,8 +6,8 @@ exports.State = {
 };
 
 exports.Action = {
-  Deploy: 'openstack/deploy',
-  Destroy: 'openstack/destroy',
-  GetLog: 'openstack/getlog'
+  Deploy: __dirname + '/deploy',
+  Destroy: __dirname + '/destroy',
+  GetLog: __dirname + '/getlog'
 };
 
