@@ -8,7 +8,7 @@ var message = require('./message');
 var App = require('./app');
 
 var app = null;
-var instance = null;
+var instances = {};
 
 var wss_port = config.get('server.wss_port');
 var wss = new WebSocket.Server({ port: wss_port });
@@ -26,27 +26,35 @@ wss.on('listening', () => {
       var incomingMessage = message.Message.fromJson(data);
       switch (incomingMessage.header.type) {
         case message.Constants.SetupCepEngine:
-          instance = new Openstack.Instance(incomingMessage);
+          var instance = new Openstack.Instance(incomingMessage);
+          instances[instance.name] = instance;
+          app.broadcast(
+            new message.CreateInstanceMessage(
+              instance.name,
+              instance.state
+            ).toJson()
+          );
 
           instance.on('changeState', state => {
             app.broadcast(
-              new message.UpdateConsoleMessage({
-                machineState: state
-              }).toJson()
+              new message.UpdateInstanceMessage(
+                instance.name,
+                instance.state
+              ).toJson()
             );
           });
 
           instance.on('finished', results => {
             app.broadcast(
-              new message.UpdateConsoleMessage({
-                machineState: instance.state,
-                results: results
-              }).toJson()
+              new message.UpdateInstanceMessage(
+                instance.name,
+                instance.state
+              ).toJson()
             );
           });
 
           instance.on('destroyed', () => {
-            instance = null;
+            delete instances[instance.name];
           });
 
           instance.create(
@@ -75,8 +83,17 @@ wss.on('connection', (ws, req) => {
     try {
       var incomingMessage = message.Message.fromJson(data);
       switch (incomingMessage.header.type) {
+        case message.Constants.InstanceReady:
+          var instanceName = incomingMessage.payload.instanceName;
+          if (instances.hasOwnProperty(instanceName)) {
+            ws.send(instances[instanceName].config.toJson());
+          }
+          break;
         case message.Constants.CepEngineReady:
-          instance.changeState(Openstack.Constants.State.Benchmarking);
+          var instanceName = incomingMessage.payload.instanceName;
+          if (instances.hasOwnProperty(instanceName)) {
+            instances[instanceName].changeState(Openstack.Constants.State.Benchmarking);
+          }
           temperature.start(config.get('temperature_samples'));
           break;
         case message.Constants.BenchmarkEnd:
@@ -91,8 +108,6 @@ wss.on('connection', (ws, req) => {
   ws.on('close', (code, reason) => {
     console.log('[WebSocket] Connection closed: ' + code + ' ' + reason);
   });
-
-  ws.send(instance.config.toJson());
 });
 
 process.stdin.resume();
@@ -104,17 +119,10 @@ function cleanup() {
     wss.close();
   }
 
-  if (instance) {
-    instance.destroy(
-      () => {
-        process.exit();
-      },
-      err => {
-        process.exit();
-      }
-    );
-  } else {
-    process.exit();
+  for (var name in instances) {
+    if (instances.hasOwnProperty(name)) {
+      instances[name].destroy();
+    }
   }
 }
 

@@ -18,7 +18,7 @@ public class WebSocket extends WebSocketClient {
 
     @Override
     public void onOpen(ServerHandshake handshakeData) {
-        System.out.println("new connection opened");
+        messageHandler.onOpen();
     }
 
     @Override
@@ -28,7 +28,7 @@ public class WebSocket extends WebSocketClient {
 
     @Override
     public void onMessage(String message) {
-        messageHandler.handleMessage(message);
+        messageHandler.onMessage(message);
     }
 
     @Override
@@ -42,6 +42,7 @@ public class WebSocket extends WebSocketClient {
 
     public interface MessageHandler {
 
-        public void handleMessage(String message);
+        public void onOpen();
+        public void onMessage(String message);
     }
 }

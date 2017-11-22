@@ -2,10 +2,13 @@ var Message = require('./Message');
 var Constants = require('./Constants');
 
 class UpdateConsoleMessage extends Message {
-  constructor(benchmarks) {
-    super(Constants.UpdateConsole);
+  constructor(name, state) {
+    super(Constants.UpdateInstance);
 
-    this.payload = benchmarks;
+    this.payload = {
+      name: name,
+      state: state
+    };
   }
 }
 

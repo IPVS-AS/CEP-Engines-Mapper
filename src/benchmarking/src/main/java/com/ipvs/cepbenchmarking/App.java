@@ -31,18 +31,23 @@ public class App {
     public App() throws Exception {
         countDownLatch = new CountDownLatch(1);
 
+        final String instanceName = Configuration.INSTANCE.getInstanceName();
         String hostIpAddress = Configuration.INSTANCE.getHostIpAddress();
 
         webSocket = new WebSocket("ws://" + hostIpAddress + ":8080");
 
         webSocket.setMessageHandler(new WebSocket.MessageHandler() {
-            public void handleMessage(String message) {
+            public void onOpen() {
+                webSocket.send(new InstanceReadyMessage(instanceName).toString());
+            }
+
+            public void onMessage(String message) {
                 System.out.println(message);
                 try {
                     switch (Message.getType(message)) {
                         case Constants.SetupCepEngine:
                             setupCepEngine(new SetupCepEngineMessage(message));
-                            webSocket.send(new CepEngineReadyMessage().toString());
+                            webSocket.send(new CepEngineReadyMessage(instanceName).toString());
                             break;
                         case Constants.Shutdown:
                             shutdown();

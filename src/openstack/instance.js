@@ -40,7 +40,6 @@ class Instance extends EventEmitter {
 
   create(success, fail) {
     this.changeState(Constants.State.Provisioning);
-    console.log('create instance');
     this.runPlaybook(
       Constants.Action.Deploy,
       () => {
@@ -120,7 +119,7 @@ class Instance extends EventEmitter {
   }
 
   static generateName() {
-    return 'benchmark_' + Math.random().toString(36).substr(2, 10);
+    return 'instance-' + Math.random().toString(36).substr(2, 10);
   }
 }
 

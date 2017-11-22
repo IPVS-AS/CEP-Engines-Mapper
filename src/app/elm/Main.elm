@@ -1,7 +1,8 @@
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Json.Decode
+import Json.Decode as Decode
 import Json.Encode as Encode exposing (Value)
 import WebSocket
 
@@ -31,12 +32,25 @@ type alias Flags =
 
 type alias Model =
   { server : String
+  , route : Route
+  , instances : List Instance
   , mqttBroker : String
   , endEventName : String
   , events : List Event
   , eventId : Int
   , statements : List Statement
   , statementId : Int
+  }
+
+
+type Route
+  = Main
+  | Console
+
+
+type alias Instance =
+  { name: String
+  , state: String
   }
 
 
@@ -65,6 +79,8 @@ type alias Statement =
 init : Flags -> (Model, Cmd msg)
 init flags =
   { server = flags.server
+  , route = Main
+  , instances = []
   , mqttBroker = "tcp://10.0.14.106:1883"
   , endEventName = "TemperatureEndEvent"
   , events = [ temperatureEvent ]
@@ -284,15 +300,59 @@ update msg model =
           ! []
 
     StartBenchmark ->
-      model
+      { model | route = Console }
         ! [ WebSocket.send model.server (encodeSetupMessage model) ]
 
     Receive message ->
       let
-        debug =
-          message |> Debug.log "msg"
+        (header, payload) =
+          decodeMessage message
+
+        messageType =
+          Dict.get "type" header
+            |> Maybe.withDefault ""
       in
-        model ! []
+        case messageType of
+          "CreateInstance" ->
+            let
+              new name state =
+                { name = name, state = state }
+
+              (name, state) =
+                (Dict.get "name" payload, Dict.get "state" payload)
+
+              instance =
+                Maybe.map2 new name state
+            in
+              case instance of
+                Just instance ->
+                  { model | instances = instance :: model.instances }
+                    ! []
+
+                Nothing ->
+                  model ! []
+
+          "UpdateInstance" ->
+            let
+              (name, state) =
+                (Dict.get "name" payload, Dict.get "state" payload)
+
+              update instance =
+                case Maybe.map2 (\x y -> (x, y)) name state of
+                  Just (name, state) ->
+                    if instance.name == name then
+                      { instance | state = state }
+                    else
+                      instance
+
+                  Nothing ->
+                    instance
+            in
+              { model | instances = List.map update model.instances }
+                ! []
+
+          _ ->
+            model ! []
 
 
 -- ENCODE
@@ -359,23 +419,49 @@ encodeStatements statements =
       List.map encode statements
 
 
+-- DECODE
+
+decodeMessage : String -> (Dict String String, Dict String String)
+decodeMessage message =
+  let
+    decode =
+      (Decode.decodeString <| Decode.dict <| Decode.dict Decode.string)
+        >> Result.withDefault Dict.empty
+
+    body field msg =
+      Dict.get field msg
+        |> Maybe.withDefault Dict.empty
+  in
+    decode message
+      |> \msg -> (body "header" msg, body "payload" msg)
+
+
 -- VIEW
 
 view : Model -> Html Msg
 view model =
-  Html.form [ class "pure-form" ]
-    [ input [ value model.mqttBroker, onInput MqttBroker ] []
-    , input [ value model.endEventName, onInput EndEventName ] []
-    , button [ type_ "button", onClick AddEvent ] [ text "Add Event" ]
-    , button [ type_ "button", onClick AddStatement ] [ text "Add Statement" ]
-    , viewEvents model.events
-    , viewStatements model.statements
-    , text model.server
-    , text (encodeSetupMessage model)
-    , button [ type_ "button", onClick StartBenchmark ]
-        [ text "Start Benchmark" ]
-    ]
+  case model.route of
+    Main ->
+      Html.form [ class "pure-form" ]
+        [ input [ value model.mqttBroker, onInput MqttBroker ] []
+        , input [ value model.endEventName, onInput EndEventName ] []
+        , button [ type_ "button", onClick AddEvent ]
+            [ text "Add Event" ]
+        , button [ type_ "button", onClick AddStatement ]
+            [ text "Add Statement" ]
+        , viewEvents model.events
+        , viewStatements model.statements
+        , text model.server
+        , text (encodeSetupMessage model)
+        , button [ type_ "button", onClick StartBenchmark ]
+            [ text "Start Benchmark" ]
+        ]
+    Console ->
+      ul [] <|
+        List.map viewInstance model.instances
 
+
+-- MAIN VIEW
 
 viewEvents : List Event -> Html Msg
 viewEvents events =
@@ -430,7 +516,7 @@ viewEventProperty eventId property =
         List.map typeOption propTypes
 
     decode =
-      Json.Decode.map (UpdateEventPropertyType eventId property.id) targetValue
+      Decode.map (UpdateEventPropertyType eventId property.id) targetValue
   in
     li []
       [ fieldset [ class "pure-group" ]
@@ -469,4 +555,14 @@ viewStatement statement =
         , button [ type_ "button", onClick (RemoveStatement statement.id) ]
             [ text "Remove Statement" ]
         ]
+    ]
+
+
+-- CONSOLE VIEW
+
+viewInstance : Instance -> Html Msg
+viewInstance instance =
+  li []
+    [ text instance.name
+    , text instance.state
     ]
