@@ -16,16 +16,13 @@ import com.espertech.esper.client.ConfigurationException;
 
 import org.json.simple.JSONObject;
 
-public enum Esper {
-    INSTANCE;
-
+public class Esper {
     private static final Logger LOGGER = Logger.getLogger(Esper.class.getName());
 
     private EPServiceProvider serviceProvider;
 
-    // TODO allow multiple instances of esper
-    private Esper() {
-        serviceProvider = EPServiceProviderManager.getDefaultProvider();
+    public Esper(String instanceName) {
+        serviceProvider = EPServiceProviderManager.getProvider(instanceName);
     }
 
     public void addEventType(String eventTypeName, Map<String, Object> typeMap) {

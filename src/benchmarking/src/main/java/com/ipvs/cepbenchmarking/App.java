@@ -48,6 +48,7 @@ public class App {
                         case Constants.SetupCepEngine:
                             SetupCepEngineMessage setup = SetupCepEngineMessage.fromJson(message);
                             setupCepEngine(
+                                    instanceName,
                                     setup.getBroker(),
                                     setup.getEndEventName(),
                                     setup.getEvents(),
@@ -83,19 +84,21 @@ public class App {
     }
 
     private void setupCepEngine(
+            String instanceName,
             String broker,
             String endEventName,
             Map<String, Map<String, String>> events,
             Map<String, String> statements) {
+        final Esper instance = new Esper(instanceName);
 
         for (Map.Entry<String, Map<String, String>> event : events.entrySet()) {
             System.out.println("[Esper] Add event type: " + event.getKey());
-            Esper.INSTANCE.addEventType(event.getKey(), (Map)event.getValue());
+            instance.addEventType(event.getKey(), (Map)event.getValue());
         }
 
         for (Map.Entry<String, String> statement : statements.entrySet()) {
             System.out.println("[Esper] Add query:\n" + statement.getValue());
-            Esper.INSTANCE.addStatement(statement.getKey(), statement.getValue());
+            instance.addStatement(statement.getKey(), statement.getValue());
         }
 
         try {
@@ -118,7 +121,7 @@ public class App {
                 Set<String> properties = event.getValue().keySet();
                 mqttClient.subscribe(event.getKey(), properties.toArray(new String[properties.size()]), new Mqtt.EventHandler() {
                     public void handleEvent(String eventName, Map<String, Object> event) {
-                        Esper.INSTANCE.sendEvent(eventName, event);
+                        instance.sendEvent(eventName, event);
                     }
                 });
             }
