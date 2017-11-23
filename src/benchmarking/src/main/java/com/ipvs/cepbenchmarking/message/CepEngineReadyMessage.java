@@ -3,9 +3,18 @@ package com.ipvs.cepbenchmarking.message;
 import org.json.simple.JSONObject;
 
 public class CepEngineReadyMessage extends Message {
+    private String instanceName;
+
     public CepEngineReadyMessage(String instanceName) {
-        type = Constants.CepEngineReady;
-        this.payload = new JSONObject();
-        this.payload.put("instanceName", instanceName);
+        super(Constants.CepEngineReady);
+        this.instanceName = instanceName;
+    }
+
+    @Override
+    public JSONObject toJson() {
+        JSONObject json = super.toJson();
+        json.put("instanceName", instanceName);
+
+        return json;
     }
 }

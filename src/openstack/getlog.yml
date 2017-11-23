@@ -10,9 +10,6 @@
         server: "{{instance_name}}"
       register: servers
 
-    - debug:
-        var: servers
-
     - name: Add instance to inventory
       add_host:
         name: "{{instance_name}}"
@@ -36,9 +33,6 @@
         dest: ./logs/{{instance_name}}.log
         flat: yes
       register: file
-
-    - debug:
-        var: file
 
   vars:
     ansible_python_interpreter: "/usr/bin/python3"

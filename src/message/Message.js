@@ -1,10 +1,6 @@
 class Message {
-  constructor(messageType) {
-    this.header = {
-      version: '0.1.0',
-      type: messageType
-    };
-    this.payload = null;
+  constructor(type) {
+    this.type = type;
   }
 
   toJson() {
@@ -15,8 +11,12 @@ class Message {
     var jsonObject = JSON.parse(json);
 
     var message = new Message();
-    message.header = jsonObject.header;
-    message.payload = jsonObject.payload;
+
+    for (var property in jsonObject) {
+      if (jsonObject.hasOwnProperty(property)) {
+        message[property] = jsonObject[property];
+      }
+    }
 
     return message;
   }

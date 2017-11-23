@@ -4,11 +4,8 @@ var Constants = require('./Constants');
 class CreateInstanceMessage extends Message {
   constructor(name, state) {
     super(Constants.CreateInstance);
-
-    this.payload = {
-      name: name,
-      state: state
-    };
+    this.name = name;
+    this.state = state;
   }
 }
 

@@ -23,10 +23,15 @@ wss.on('listening', () => {
     console.log(data);
 
     try {
-      var incomingMessage = message.Message.fromJson(data);
-      switch (incomingMessage.header.type) {
+      var msg = message.Message.fromJson(data);
+      switch (msg.type) {
         case message.Constants.SetupCepEngine:
-          var instance = new Openstack.Instance(incomingMessage);
+          var instance = new Openstack.Instance(
+            msg.broker,
+            msg.endEventName,
+            msg.events,
+            msg.statements
+          );
           instances[instance.name] = instance;
           app.broadcast(
             new message.CreateInstanceMessage(
@@ -81,18 +86,27 @@ wss.on('connection', (ws, req) => {
     console.log(data);
 
     try {
-      var incomingMessage = message.Message.fromJson(data);
-      switch (incomingMessage.header.type) {
+      var msg = message.Message.fromJson(data);
+      switch (msg.type) {
         case message.Constants.InstanceReady:
-          var instanceName = incomingMessage.payload.instanceName;
+          var instanceName = msg.instanceName;
           if (instances.hasOwnProperty(instanceName)) {
-            ws.send(instances[instanceName].config.toJson());
+            ws.send(
+              new message.SetupCepEngineMessage(
+                instances[instanceName].broker,
+                instances[instanceName].endEventName,
+                instances[instanceName].events,
+                instances[instanceName].statements
+              ).toJson()
+            );
           }
           break;
         case message.Constants.CepEngineReady:
-          var instanceName = incomingMessage.payload.instanceName;
+          var instanceName = msg.instanceName;
           if (instances.hasOwnProperty(instanceName)) {
-            instances[instanceName].changeState(Openstack.Constants.State.Benchmarking);
+            instances[instanceName].changeState(
+              Openstack.Constants.State.Benchmarking
+            );
           }
           temperature.start(config.get('temperature_samples'));
           break;

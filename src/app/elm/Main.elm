@@ -1,4 +1,3 @@
-import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -304,80 +303,47 @@ update msg model =
         ! [ WebSocket.send model.server (encodeSetupMessage model) ]
 
     Receive message ->
-      let
-        (header, payload) =
-          decodeMessage message
-
-        messageType =
-          Dict.get "type" header
-            |> Maybe.withDefault ""
-      in
-        case messageType of
-          "CreateInstance" ->
-            let
-              new name state =
-                { name = name, state = state }
-
-              (name, state) =
-                (Dict.get "name" payload, Dict.get "state" payload)
-
-              instance =
-                Maybe.map2 new name state
-            in
-              case instance of
-                Just instance ->
-                  { model | instances = instance :: model.instances }
-                    ! []
-
-                Nothing ->
-                  model ! []
-
-          "UpdateInstance" ->
-            let
-              (name, state) =
-                (Dict.get "name" payload, Dict.get "state" payload)
-
-              update instance =
-                case Maybe.map2 (\x y -> (x, y)) name state of
-                  Just (name, state) ->
-                    if instance.name == name then
-                      { instance | state = state }
-                    else
-                      instance
-
-                  Nothing ->
-                    instance
-            in
-              { model | instances = List.map update model.instances }
+      case decodeMessageType message of
+        "CreateInstance" ->
+          case decodeInstance message of
+            Ok instance ->
+              { model | instances = instance :: model.instances }
                 ! []
 
-          _ ->
-            model ! []
+            _ ->
+              model ! []
+
+        "UpdateInstance" ->
+          let
+            update decoded instance =
+              if instance.name == decoded.name then
+                { instance | state = decoded.state }
+              else
+                instance
+          in
+            case decodeInstance message of
+              Ok instance ->
+                { model | instances = List.map (update instance) model.instances }
+                  ! []
+
+              _ ->
+                model ! []
+
+        _ ->
+          model ! []
 
 
 -- ENCODE
 
 encodeSetupMessage : Model -> String
 encodeSetupMessage model =
-  let
-    header =
-      Encode.object <|
-        [ ("version", Encode.string "0.1.0")
-        , ("type", Encode.string "SetupCepEngine")
-        ]
-
-    payload =
-      Encode.object <|
-        [ ("broker", Encode.string model.mqttBroker)
-        , ("endEventName", Encode.string model.endEventName)
-        , ("events", encodeEvents model.events)
-        , ("statements", encodeStatements model.statements)
-        ]
-  in
-    Encode.encode 0 << Encode.object <|
-      [ ("header", header)
-      , ("payload", payload)
-      ]
+  Encode.encode 0 << Encode.object <|
+    [ ("type", Encode.string "SetupCepEngine")
+    , ("broker", Encode.string model.mqttBroker)
+    , ("endEventName", Encode.string model.endEventName)
+    , ("events", encodeEvents model.events)
+    , ("statements", encodeStatements model.statements)
+    ]
 
 
 encodeEvents : List Event -> Value
@@ -421,19 +387,21 @@ encodeStatements statements =
 
 -- DECODE
 
-decodeMessage : String -> (Dict String String, Dict String String)
-decodeMessage message =
-  let
-    decode =
-      (Decode.decodeString <| Decode.dict <| Decode.dict Decode.string)
-        >> Result.withDefault Dict.empty
+decodeMessageType : String -> String
+decodeMessageType message =
+  Decode.decodeString (Decode.field "type" Decode.string) message
+    |> Result.withDefault ""
 
-    body field msg =
-      Dict.get field msg
-        |> Maybe.withDefault Dict.empty
+
+decodeInstance : String -> Result String Instance
+decodeInstance message =
+  let
+    decoder =
+      Decode.map2 Instance
+        (Decode.field "name" Decode.string)
+        (Decode.field "state" Decode.string)
   in
-    decode message
-      |> \msg -> (body "header" msg, body "payload" msg)
+    Decode.decodeString decoder message
 
 
 -- VIEW

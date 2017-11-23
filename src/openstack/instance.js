@@ -6,11 +6,14 @@ var Playbook = require('node-ansible').Playbook;
 var Constants = require('./constants');
 
 class Instance extends EventEmitter {
-  constructor(config) {
+  constructor(broker, endEventName, events, statements) {
     super();
-    this.config = config;
     this.name = Instance.generateName();
     this.state = Constants.State.Created;
+    this.broker = broker;
+    this.endEventName = endEventName;
+    this.events = events;
+    this.statements = statements;
     this.results = [];
   }
 

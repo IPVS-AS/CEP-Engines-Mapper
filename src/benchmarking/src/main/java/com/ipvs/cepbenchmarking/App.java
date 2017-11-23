@@ -46,7 +46,12 @@ public class App {
                 try {
                     switch (Message.getType(message)) {
                         case Constants.SetupCepEngine:
-                            setupCepEngine(new SetupCepEngineMessage(message));
+                            SetupCepEngineMessage setup = SetupCepEngineMessage.fromJson(message);
+                            setupCepEngine(
+                                    setup.getBroker(),
+                                    setup.getEndEventName(),
+                                    setup.getEvents(),
+                                    setup.getStatements());
                             webSocket.send(new CepEngineReadyMessage(instanceName).toString());
                             break;
                         case Constants.Shutdown:
@@ -77,22 +82,27 @@ public class App {
         System.exit(0);
     }
 
-    private void setupCepEngine(SetupCepEngineMessage message) {
-        for (Map.Entry<String, Map<String, String>> event : message.getEvents().entrySet()) {
+    private void setupCepEngine(
+            String broker,
+            String endEventName,
+            Map<String, Map<String, String>> events,
+            Map<String, String> statements) {
+
+        for (Map.Entry<String, Map<String, String>> event : events.entrySet()) {
             System.out.println("[Esper] Add event type: " + event.getKey());
             Esper.INSTANCE.addEventType(event.getKey(), (Map)event.getValue());
         }
 
-        for (Map.Entry<String, String> statement : message.getStatements().entrySet()) {
+        for (Map.Entry<String, String> statement : statements.entrySet()) {
             System.out.println("[Esper] Add query:\n" + statement.getValue());
             Esper.INSTANCE.addStatement(statement.getKey(), statement.getValue());
         }
 
         try {
-            mqttClient = new Mqtt(message.getBroker());
+            mqttClient = new Mqtt(broker);
             mqttClient.connect();
 
-            mqttClient.subscribe(message.getEndEventName(), new String[] {"end"}, new Mqtt.EventHandler() {
+            mqttClient.subscribe(endEventName, new String[] {"end"}, new Mqtt.EventHandler() {
                 public void handleEvent(String eventName, Map<String, Object> event) {
                     System.out.println("BenchmarkEnd message received, wrapping up in 10 seconds");
                     ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
@@ -104,7 +114,7 @@ public class App {
                 }
             });
 
-            for (Map.Entry<String, Map<String, String>> event : message.getEvents().entrySet()) {
+            for (Map.Entry<String, Map<String, String>> event : events.entrySet()) {
                 Set<String> properties = event.getValue().keySet();
                 mqttClient.subscribe(event.getKey(), properties.toArray(new String[properties.size()]), new Mqtt.EventHandler() {
                     public void handleEvent(String eventName, Map<String, Object> event) {

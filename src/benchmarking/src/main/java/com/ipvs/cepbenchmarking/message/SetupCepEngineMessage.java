@@ -15,14 +15,27 @@ public class SetupCepEngineMessage extends Message {
     private Map<String, Map<String, String>> events;
     private Map<String, String> statements;
 
-    public SetupCepEngineMessage(String message) throws ParseException {
-        super(message);
+    private SetupCepEngineMessage(
+            String broker,
+            String endEventName,
+            Map<String, Map<String, String>> events,
+            Map<String, String> statements) {
+        super(Constants.SetupCepEngine);
+        this.broker = broker;
+        this.endEventName = endEventName;
+        this.events = events;
+        this.statements = statements;
+    }
 
-        broker = (String) this.payload.get("broker");
-        endEventName = (String) this.payload.get("endEventName");
+    public static SetupCepEngineMessage fromJson(String jsonString) throws ParseException {
+        JSONParser jsonParser = new JSONParser();
+        JSONObject json = (JSONObject) jsonParser.parse(jsonString);
 
-        JSONArray jsonArray = (JSONArray) this.payload.get("events");
-        events = new HashMap<String, Map<String, String>>();
+        String broker = (String) json.get("broker");
+        String endEventName = (String) json.get("endEventName");
+
+        JSONArray jsonArray = (JSONArray) json.get("events");
+        Map<String, Map<String, String>> events = new HashMap<String, Map<String, String>>();
         for (Object input : jsonArray) {
             String eventName = (String) ((JSONObject) input).get("name");
 
@@ -36,13 +49,15 @@ public class SetupCepEngineMessage extends Message {
             events.put(eventName, properties);
         }
 
-        jsonArray = (JSONArray) this.payload.get("statements");
-        statements = new HashMap<String, String>();
+        jsonArray = (JSONArray) json.get("statements");
+        Map<String, String> statements = new HashMap<String, String>();
         for (Object output : jsonArray) {
             String statementName = (String) ((JSONObject) output).get("name");
             String statement = (String) ((JSONObject) output).get("query");
             statements.put(statementName, statement);
         }
+
+        return new SetupCepEngineMessage(broker, endEventName, events, statements);
     }
 
     public String getBroker() {

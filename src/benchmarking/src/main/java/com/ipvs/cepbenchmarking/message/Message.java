@@ -4,53 +4,42 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-public abstract class Message {
-
-    // header
-    protected String version = "0.1.0";
+public class Message {
     protected String type;
 
-    protected JSONObject payload;
-
-    public Message() {
+    public Message(String type) {
+        this.type = type;
     }
 
-    public Message(String message) throws ParseException {
+    public static Message fromJson(String jsonString) throws ParseException {
         JSONParser jsonParser = new JSONParser();
+        JSONObject json = (JSONObject) jsonParser.parse(jsonString);
 
-        JSONObject jsonObject  = (JSONObject) jsonParser.parse(message);
+        String type = (String) json.get("type");
 
-        version = (String) ((JSONObject) jsonObject.get("header")).get("version");
-        type = (String) ((JSONObject) jsonObject.get("header")).get("type");
-        payload = (JSONObject) jsonObject.get("payload");
-    }
-
-    public String getVersion() {
-        return version;
+        return new Message(type);
     }
 
     public String getType() {
         return type;
     }
 
-    public static String getType(String message) throws ParseException {
+    public static String getType(String jsonString) throws ParseException {
         JSONParser jsonParser = new JSONParser();
+        JSONObject json  = (JSONObject) jsonParser.parse(jsonString);
 
-        JSONObject jsonObject  = (JSONObject) jsonParser.parse(message);
+        return (String) json.get("type");
+    }
 
-        return (String) ((JSONObject) jsonObject.get("header")).get("type");
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("type", type);
+
+        return json;
     }
 
     @Override
     public String toString() {
-        JSONObject header = new JSONObject();
-        header.put("version", version);
-        header.put("type", type);
-
-        JSONObject message = new JSONObject();
-        message.put("header", header);
-        message.put("payload", payload);
-
-        return message.toJSONString();
+        return this.toJson().toJSONString();
     }
 }
