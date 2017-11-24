@@ -33,6 +33,7 @@ type alias Model =
   { server : String
   , route : Route
   , instances : List Instance
+  , engine : String
   , mqttBroker : String
   , endEventName : String
   , events : List Event
@@ -80,6 +81,7 @@ init flags =
   { server = flags.server
   , route = Main
   , instances = []
+  , engine = "Esper"
   , mqttBroker = "tcp://10.0.14.106:1883"
   , endEventName = "TemperatureEndEvent"
   , events = [ temperatureEvent ]
@@ -117,7 +119,8 @@ warningStatement =
 -- UPDATE
 
 type Msg
-  = MqttBroker String
+  = Engine String
+  | MqttBroker String
   | EndEventName String
   | AddEvent
   | AddEventProperty Int
@@ -137,6 +140,9 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    Engine engine ->
+      { model | engine = engine } ! []
+
     MqttBroker mqttBroker ->
       { model | mqttBroker = mqttBroker } ! []
 
@@ -411,7 +417,8 @@ view model =
   case model.route of
     Main ->
       Html.form [ class "pure-form" ]
-        [ input [ value model.mqttBroker, onInput MqttBroker ] []
+        [ viewEngine model.engine
+        , input [ value model.mqttBroker, onInput MqttBroker ] []
         , input [ value model.endEventName, onInput EndEventName ] []
         , button [ type_ "button", onClick AddEvent ]
             [ text "Add Event" ]
@@ -430,6 +437,26 @@ view model =
 
 
 -- MAIN VIEW
+
+viewEngine : String -> Html Msg
+viewEngine engine =
+  let
+    engines =
+      [ "Esper"
+      ]
+
+    engineOption opt =
+      if engine == opt then
+        option [ selected True ] [ text engine ]
+      else
+        option [] [ text engine ]
+
+    decode =
+      Decode.map Engine targetValue
+  in
+    select [ attribute "value" engine, on "change" decode ] <|
+      List.map engineOption engines
+
 
 viewEvents : List Event -> Html Msg
 viewEvents events =
