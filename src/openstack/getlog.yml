@@ -19,18 +19,19 @@
         ansible_become: true
         ansible_ssh_private_key_file: ~/.ssh/{{instance_name}}
 
+    - name: Create logs directory
+      file:
+        path: ./logs/{{benchmark_name}}
+        state: directory
+
+
 - name: Connect to instance
   hosts: "{{instance_name}}"
   tasks:
-    - name: Create logs directory
-      file:
-        path: ./logs
-        state: directory
-
     - name: Get benchmarking log
       fetch:
         src: /root/benchmark.log
-        dest: ./logs/{{instance_name}}.log
+        dest: ./logs/{{benchmark_name}}/{{instance_name}}.log
         flat: yes
       register: file
 

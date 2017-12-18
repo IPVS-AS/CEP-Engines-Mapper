@@ -26,9 +26,9 @@ class App extends EventEmitter {
       });
     });
 
-    var server = http.createServer(app);
+    this.server = http.createServer(app);
 
-    this.wss = new WebSocket.Server({ server: server, path: '/' });
+    this.wss = new WebSocket.Server({ server: this.server, path: '/' });
     this.wss.on('listening', () => {
       console.log('[Express] WebSocketServer started listening');
     });
@@ -45,7 +45,7 @@ class App extends EventEmitter {
       });
     });
 
-    server.listen(port, () => {
+    this.server.listen(port, () => {
       console.log('[Express] Server listening on port ' + port);
     });
   }
@@ -56,6 +56,11 @@ class App extends EventEmitter {
         client.send(message);
       }
     });
+  }
+
+  close() {
+    this.wss.close();
+    this.server.close();
   }
 }
 

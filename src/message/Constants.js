@@ -1,3 +1,4 @@
+exports.SubmitForm = 'SubmitForm';
 exports.SetupCepEngine = 'SetupCepEngine';
 exports.InstanceReady = 'InstanceReady';
 exports.CepEngineReady = 'CepEngineReady';

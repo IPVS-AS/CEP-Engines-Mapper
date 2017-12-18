@@ -7,38 +7,41 @@ import java.net.InetSocketAddress;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 
+import com.ipvs.cepbenchmarking.engine.Engine;
 import com.ipvs.cepbenchmarking.engine.Esper;
+import com.ipvs.cepbenchmarking.engine.Siddhi;
 
 import com.ipvs.cepbenchmarking.message.*;
 
 public class App {
     private static final Logger LOGGER = Logger.getLogger(App.class.getName());
 
-    private final CountDownLatch countDownLatch;
+    private final String benchmarkName;
+    private final String instanceName;
     private final WebSocket webSocket;
     private Mqtt mqttClient;
 
     public App() throws Exception {
-        countDownLatch = new CountDownLatch(1);
 
-        final String instanceName = Configuration.INSTANCE.getInstanceName();
+        benchmarkName = Configuration.INSTANCE.getBenchmarkName();
+        instanceName = Configuration.INSTANCE.getInstanceName();
         String hostIpAddress = Configuration.INSTANCE.getHostIpAddress();
 
         webSocket = new WebSocket("ws://" + hostIpAddress + ":8080");
 
         webSocket.setMessageHandler(new WebSocket.MessageHandler() {
             public void onOpen() {
-                webSocket.send(new InstanceReadyMessage(instanceName).toString());
+                webSocket.send(new InstanceReadyMessage(benchmarkName, instanceName).toString());
             }
 
             public void onMessage(String message) {
@@ -48,12 +51,11 @@ public class App {
                         case Constants.SetupCepEngine:
                             SetupCepEngineMessage setup = SetupCepEngineMessage.fromJson(message);
                             setupCepEngine(
-                                    instanceName,
                                     setup.getBroker(),
                                     setup.getEndEventName(),
-                                    setup.getEvents(),
-                                    setup.getStatements());
-                            webSocket.send(new CepEngineReadyMessage(instanceName).toString());
+                                    setup.getEngine(),
+                                    setup.getConfig());
+                            webSocket.send(new CepEngineReadyMessage(benchmarkName, instanceName).toString());
                             break;
                         case Constants.Shutdown:
                             shutdown();
@@ -68,10 +70,6 @@ public class App {
         webSocket.connect();
     }
 
-    public void run() throws InterruptedException {
-        countDownLatch.await();
-    }
-
     public void shutdown() {
         System.out.println("Shutting down...");
         try {
@@ -84,28 +82,28 @@ public class App {
     }
 
     private void setupCepEngine(
-            String instanceName,
             String broker,
             String endEventName,
-            Map<String, Map<String, String>> events,
-            Map<String, String> statements) {
-        final Esper instance = new Esper(instanceName);
+            String engine,
+            JSONObject config) {
+        final Engine instance;
 
-        for (Map.Entry<String, Map<String, String>> event : events.entrySet()) {
-            System.out.println("[Esper] Add event type: " + event.getKey());
-            instance.addEventType(event.getKey(), (Map)event.getValue());
-        }
-
-        for (Map.Entry<String, String> statement : statements.entrySet()) {
-            System.out.println("[Esper] Add query:\n" + statement.getValue());
-            instance.addStatement(statement.getKey(), statement.getValue());
+        switch (engine) {
+            case Constants.Esper:
+                instance = new Esper(config);
+                break;
+            case Constants.Siddhi:
+                instance = new Siddhi(config);
+                break;
+            default:
+                instance = null;
         }
 
         try {
             mqttClient = new Mqtt(broker);
             mqttClient.connect();
 
-            mqttClient.subscribe(endEventName, new String[] {"end"}, new Mqtt.EventHandler() {
+            mqttClient.subscribe(endEventName, new Mqtt.EventHandler() {
                 public void handleEvent(String eventName, Map<String, Object> event) {
                     System.out.println("BenchmarkEnd message received, wrapping up in 10 seconds");
                     ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
@@ -117,22 +115,19 @@ public class App {
                 }
             });
 
-            for (Map.Entry<String, Map<String, String>> event : events.entrySet()) {
-                Set<String> properties = event.getValue().keySet();
-                mqttClient.subscribe(event.getKey(), properties.toArray(new String[properties.size()]), new Mqtt.EventHandler() {
+            for (String event : instance.getEvents()) {
+                mqttClient.subscribe(event, new Mqtt.EventHandler() {
                     public void handleEvent(String eventName, Map<String, Object> event) {
                         instance.sendEvent(eventName, event);
                     }
                 });
             }
         } catch (MqttException e) {
-            e.printStackTrace();
-            // TODO Log excepetion
+            LOGGER.fine(e.toString());
         }
     }
 
     public static void main(String[] args) throws Exception {
         App app = new App();
-        app.run();
     }
 }

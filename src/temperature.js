@@ -1,8 +1,9 @@
 var mqtt = require('mqtt');
+var config = require('config');
 
 function start(publishCount) {
   console.log('Connect mqtt');
-  var client = mqtt.connect('tcp://10.0.14.106:1883');
+  var client = mqtt.connect(config.get('mqtt'));
 
   client.on('connect', () => {
     setIntervalN(

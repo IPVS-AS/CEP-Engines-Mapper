@@ -1,6 +1,7 @@
 exports.State = {
   Created: 'Created',
   Provisioning: 'Provisioning',
+  Ready: 'Ready',
   Benchmarking: 'Benchmarking',
   Finished: 'Finished'
 };
@@ -10,4 +11,3 @@ exports.Action = {
   Destroy: __dirname + '/destroy',
   GetLog: __dirname + '/getlog'
 };
-

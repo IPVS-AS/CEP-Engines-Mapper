@@ -6,5 +6,6 @@
   "app": {
     "port": 3000
   },
+  "mqtt": "tcp://192.168.209.190:1883",
   "temperature_samples": 50
 }

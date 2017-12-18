@@ -2,12 +2,12 @@ var Message = require('./Message');
 var Constants = require('./Constants');
 
 class SetupCepEngineMessage extends Message {
-  constructor(broker, endEventName, events, statements) {
+  constructor(broker, endEventName, engine, config) {
     super(Constants.SetupCepEngine);
     this.broker = broker;
     this.endEventName = endEventName;
-    this.events = events;
-    this.statements = statements;
+    this.engine = engine;
+    this.config = config;
   }
 }
 

@@ -88,5 +88,6 @@
     ansible_python_interpreter: "/usr/bin/python3"
 
   environment:
+    BENCHMARK_NAME: "{{benchmark_name}}"
     INSTANCE_NAME: "{{instance_name}}"
     HOST_IP_ADDRESS: "{{host_ip_address}}"

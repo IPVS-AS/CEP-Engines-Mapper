@@ -8,7 +8,7 @@ var message = require('./message');
 var App = require('./app');
 
 var app = null;
-var instances = {};
+var benchmarks = {};
 
 var wss_port = config.get('server.wss_port');
 var wss = new WebSocket.Server({ port: wss_port });
@@ -25,49 +25,24 @@ wss.on('listening', () => {
     try {
       var msg = message.Message.fromJson(data);
       switch (msg.type) {
-        case message.Constants.SetupCepEngine:
-          var instance = new Openstack.Instance(
+        case message.Constants.SubmitForm:
+          var benchmark = new Openstack.Benchmark(
             msg.broker,
             msg.endEventName,
-            msg.events,
-            msg.statements
+            msg.instances
           );
-          instances[instance.name] = instance;
-          app.broadcast(
-            new message.CreateInstanceMessage(
-              instance.name,
-              instance.state
-            ).toJson()
-          );
+          benchmarks[benchmark.name] = benchmark;
+          console.log('New benchmark: ' + benchmark.name);
 
-          instance.on('changeState', state => {
-            app.broadcast(
-              new message.UpdateInstanceMessage(
-                instance.name,
-                instance.state
-              ).toJson()
-            );
+          benchmark.on('changeState', (instanceName, state) => {
+            console.log(benchmark.name + '/' + instanceName + ':' + state);
           });
 
-          instance.on('finished', results => {
-            app.broadcast(
-              new message.UpdateInstanceMessage(
-                instance.name,
-                instance.state
-              ).toJson()
-            );
+          benchmark.on('ready', () => {
+            temperature.start(config.get('temperature_samples'));
           });
 
-          instance.on('destroyed', () => {
-            delete instances[instance.name];
-          });
-
-          instance.create(
-            () => {},
-            err => {
-              console.log(err);
-            }
-          );
+          benchmark.start();
           break;
       }
     } catch (err) {
@@ -89,26 +64,28 @@ wss.on('connection', (ws, req) => {
       var msg = message.Message.fromJson(data);
       switch (msg.type) {
         case message.Constants.InstanceReady:
-          var instanceName = msg.instanceName;
-          if (instances.hasOwnProperty(instanceName)) {
-            ws.send(
-              new message.SetupCepEngineMessage(
-                instances[instanceName].broker,
-                instances[instanceName].endEventName,
-                instances[instanceName].events,
-                instances[instanceName].statements
-              ).toJson()
-            );
+          if (benchmarks.hasOwnProperty(msg.benchmark)) {
+            var benchmark = benchmarks[msg.benchmark];
+
+            if (benchmark.instances.hasOwnProperty(msg.instance)) {
+              var instance = benchmark.instances[msg.instance];
+
+              ws.send(
+                new message.SetupCepEngineMessage(
+                  benchmark.broker,
+                  benchmark.endEventName,
+                  instance.engine,
+                  instance.config
+                ).toJson()
+              );
+            }
           }
           break;
         case message.Constants.CepEngineReady:
-          var instanceName = msg.instanceName;
-          if (instances.hasOwnProperty(instanceName)) {
-            instances[instanceName].changeState(
-              Openstack.Constants.State.Benchmarking
-            );
+          if (benchmarks.hasOwnProperty(msg.benchmark)) {
+            var benchmark = benchmarks[msg.benchmark];
+            benchmark.readyInstance(msg.instance);
           }
-          temperature.start(config.get('temperature_samples'));
           break;
         case message.Constants.BenchmarkEnd:
           ws.send(new message.ShutdownMessage().toJson());
@@ -133,9 +110,17 @@ function cleanup() {
     wss.close();
   }
 
-  for (var name in instances) {
-    if (instances.hasOwnProperty(name)) {
-      instances[name].destroy();
+  if (app) {
+    app.close();
+  }
+
+  for (var b in benchmarks) {
+    if (benchmarks.hasOwnProperty(b)) {
+      for (var i in benchmarks[b].instances) {
+        if (benchmarks[b].instances.hasOwnProperty(i)) {
+          benchmarks[b].instances[i].destroy();
+        }
+      }
     }
   }
 }

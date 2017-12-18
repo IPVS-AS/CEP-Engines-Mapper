@@ -1,26 +1,27 @@
 var fs = require('fs');
 var path = require('path');
 var ip = require('ip');
+var config = require('config');
 var EventEmitter = require('events');
 var Playbook = require('node-ansible').Playbook;
 var Constants = require('./constants');
 
 class Instance extends EventEmitter {
-  constructor(broker, endEventName, events, statements) {
+  constructor(benchmark, engine, config) {
     super();
+    this.benchmark = benchmark;
     this.name = Instance.generateName();
     this.state = Constants.State.Created;
-    this.broker = broker;
-    this.endEventName = endEventName;
-    this.events = events;
-    this.statements = statements;
+    this.engine = engine;
+    this.config = config;
     this.results = [];
   }
 
   runPlaybook(action, success, fail) {
     var playbook = new Playbook().playbook(action).variables({
+      benchmark_name: this.benchmark,
       instance_name: this.name,
-      host_ip_address: ip.address()
+      host_ip_address: config.get('server.ip')
     });
 
     playbook.on('stdout', data => {
@@ -93,7 +94,7 @@ class Instance extends EventEmitter {
 
   getResults(success, fail) {
     fs.readFile(
-      path.join(__dirname, 'logs/' + this.name + '.log'),
+      path.join(__dirname, 'logs/' + this.benchmark + '/' + this.name + '.log'),
       (err, data) => {
         if (err) {
           return fail(err);
@@ -102,18 +103,12 @@ class Instance extends EventEmitter {
         var logEvents = data
           .toString()
           .split('\n')
-          .filter(x => x)
-          .map(JSON.parse);
+          .filter(x => x);
 
         var results = [];
 
         logEvents.forEach(logEvent => {
-          var message = JSON.parse(logEvent.message);
-          results.push({
-            timestamp: logEvent.timestamp,
-            statement: message.statement,
-            events: message.event
-          });
+          console.log(logEvent);
         });
 
         success(results);

@@ -10,4 +10,7 @@ public final class Constants {
     public static final String CepEngineReady = "CepEngineReady";
     public static final String BenchmarkEnd = "BenchmarkEnd";
     public static final String Shutdown = "Shutdown";
+
+    public static final String Esper = "Esper";
+    public static final String Siddhi = "Siddhi";
 }
