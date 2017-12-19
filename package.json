@@ -19,6 +19,7 @@
     "config": "^1.28.1",
     "express": "^4.15.4",
     "ip": "^1.1.5",
+    "mongodb": "^3.0.0-rc0",
     "mqtt": "^2.9.1",
     "node-ansible": "^0.5.5",
     "node-ssh": "^4.2.3",
