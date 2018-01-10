@@ -5,6 +5,7 @@ var config = require('config');
 var EventEmitter = require('events');
 var Playbook = require('node-ansible').Playbook;
 var Constants = require('./constants');
+var MongoDB = require('../mongodb');
 
 class Instance extends EventEmitter {
   constructor(benchmark, engine, config) {
@@ -14,7 +15,6 @@ class Instance extends EventEmitter {
     this.state = Constants.State.Created;
     this.engine = engine;
     this.config = config;
-    this.results = [];
   }
 
   runPlaybook(action, success, fail) {
@@ -93,6 +93,8 @@ class Instance extends EventEmitter {
   }
 
   getResults(success, fail) {
+    var self = this;
+
     fs.readFile(
       path.join(__dirname, 'logs/' + this.benchmark + '/' + this.name + '.log'),
       (err, data) => {
@@ -100,18 +102,11 @@ class Instance extends EventEmitter {
           return fail(err);
         }
 
-        var logEvents = data
-          .toString()
-          .split('\n')
-          .filter(x => x);
+        var events = data.toString().split('\n').filter(x => x);
 
-        var results = [];
+        MongoDB.insertEvents(self.benchmark, self.name, events);
 
-        logEvents.forEach(logEvent => {
-          console.log(logEvent);
-        });
-
-        success(results);
+        success();
       }
     );
   }

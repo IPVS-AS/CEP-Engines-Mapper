@@ -3,6 +3,7 @@ var WebSocket = require('ws');
 var node_ssh = require('node-ssh');
 var ssh = new node_ssh();
 var Openstack = require('./openstack');
+var MongoDB = require('./mongodb');
 var temperature = require('./temperature');
 var message = require('./message');
 var App = require('./app');
@@ -31,6 +32,10 @@ wss.on('listening', () => {
             msg.endEventName,
             msg.instances
           );
+
+          // add benchmark to db
+          MongoDB.insertBenchmark(benchmark);
+
           benchmarks[benchmark.name] = benchmark;
           console.log('New benchmark: ' + benchmark.name);
 
