@@ -131,11 +131,13 @@ function cleanup() {
 
   for (var b in benchmarks) {
     if (benchmarks.hasOwnProperty(b)) {
-      for (var i in benchmarks[b].instances) {
-        if (benchmarks[b].instances.hasOwnProperty(i)) {
-          benchmarks[b].instances[i].destroy();
+      benchmarks[b].destroyAll(err => {
+        if (err) {
+          process.exit(1);
         }
-      }
+
+        process.exit(0);
+      });
     }
   }
 }

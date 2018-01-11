@@ -3,7 +3,8 @@ exports.State = {
   Provisioning: 'Provisioning',
   Ready: 'Ready',
   Benchmarking: 'Benchmarking',
-  Finished: 'Finished'
+  Finished: 'Finished',
+  Failed: 'Failed'
 };
 
 exports.Action = {

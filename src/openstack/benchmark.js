@@ -63,6 +63,35 @@ class Benchmark extends EventEmitter {
     return true;
   }
 
+  instancesFinished() {
+    for (var instance in this.instances) {
+      if (this.instances.hasOwnProperty(instance)) {
+        if (this.instances[instance].state != Constants.State.Finished) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  destroyAll(callback) {
+    for (var instance in this.instances) {
+      if (this.instances.hasOwnProperty(instance)) {
+        this.instances[instance].destroy(
+          () => {
+            if (this.instancesFinished()) {
+              return callback(null);
+            }
+          },
+          err => {
+            return callback(err);
+          }
+        );
+      }
+    }
+  }
+
   static generateName() {
     return 'benchmark-' + Math.random().toString(36).substr(2, 10);
   }

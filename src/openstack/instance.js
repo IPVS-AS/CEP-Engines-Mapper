@@ -49,22 +49,21 @@ class Instance extends EventEmitter {
       () => {
         this.getLog(
           () => {
-            this.getResults(
-              results => {
-                this.results = results;
-                this.changeState(Constants.State.Finished);
-                this.emit('finished', results);
-                this.destroy();
+            this.getEvents(
+              () => {
+                this.destroy(success, fail);
               },
               err => {
-                this.destroy();
-                fail(err);
+                this.destroy(() => {
+                  fail(err);
+                }, fail);
               }
             );
           },
           err => {
-            this.destroy();
-            fail(err);
+            this.destroy(() => {
+              fail(err);
+            }, fail);
           }
         );
       },
@@ -73,13 +72,20 @@ class Instance extends EventEmitter {
   }
 
   destroy(success, fail) {
+    if (this.state == Constants.State.Finished) {
+      return success();
+    }
+
     this.runPlaybook(
       Constants.Action.Destroy,
       () => {
-        this.emit('destroyed');
+        this.changeState(Constants.State.Finished);
         success();
       },
-      fail
+      err => {
+        this.changeState(Constants.State.Failed);
+        fail(err);
+      }
     );
   }
 
@@ -93,7 +99,7 @@ class Instance extends EventEmitter {
     this.emit('changeState', state);
   }
 
-  getResults(success, fail) {
+  getEvents(success, fail) {
     var self = this;
 
     fs.readFile(
