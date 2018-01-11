@@ -15,7 +15,7 @@ type alias Model =
 
 
 type Route
-  = Main
+  = Benchmarks
   | Form
 
 
@@ -34,6 +34,7 @@ type alias Instance =
   , state : String
   , engine : String
   , config : Config
+  , events : List String
   }
 
 

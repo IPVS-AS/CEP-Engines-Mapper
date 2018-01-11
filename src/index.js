@@ -19,7 +19,7 @@ wss.on('listening', () => {
 
   app = new App(config.get('app.port'));
 
-  app.on('message', data => {
+  app.on('message', (ws, data) => {
     console.log('[App] Received message');
     console.log(data);
 
@@ -47,7 +47,17 @@ wss.on('listening', () => {
             temperature.start(config.get('temperature_samples'));
           });
 
+          MongoDB.findBenchmarks(benchmarks => {
+            ws.send(new message.BenchmarksMessage(benchmarks).toJson());
+          });
+
           benchmark.start();
+          break;
+
+        case message.Constants.RefreshBenchmarks:
+          MongoDB.findBenchmarks(benchmarks => {
+            ws.send(new message.BenchmarksMessage(benchmarks).toJson());
+          });
           break;
       }
     } catch (err) {

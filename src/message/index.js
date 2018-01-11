@@ -4,3 +4,4 @@ exports.SetupCepEngineMessage = require('./SetupCepEngineMessage');
 exports.ShutdownMessage = require('./ShutdownMessage');
 exports.UpdateInstanceMessage = require('./UpdateInstanceMessage');
 exports.CreateInstanceMessage = require('./CreateInstanceMessage');
+exports.BenchmarksMessage = require('./BenchmarksMessage');

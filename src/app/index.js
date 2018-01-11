@@ -37,7 +37,7 @@ class App extends EventEmitter {
       console.log('[Express] WebSocketClient connected');
 
       ws.on('message', data => {
-        this.emit('message', data);
+        this.emit('message', ws, data);
       });
 
       ws.on('close', (code, reason) => {

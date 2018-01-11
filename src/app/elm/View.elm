@@ -13,13 +13,12 @@ import Update exposing (..)
 view : Model -> Html Msg
 view model =
   case model.route of
-    Main ->
-      text "main"
---      div []
---        [ viewBenchmarks model.benchmarks
---        , button [ type_ "button", onClick AddBenchmark ]
---            [ text "New Benchmark" ]
---        ]
+    Benchmarks ->
+      div []
+        [ viewBenchmarks model.benchmarks
+        , button [ type_ "button", onClick RefreshBenchmarks ]
+            [ text "Refresh Benchmarks" ]
+        ]
 
     Form ->
       Html.form [ class "pure-form" ]
@@ -34,14 +33,41 @@ view model =
         ]
 
 
--- MAIN VIEW
+-- BENCHMARKS VIEW
+
+viewBenchmarks : List Benchmark -> Html Msg
+viewBenchmarks benchmarks =
+  ul [] <|
+    List.map viewBenchmark benchmarks
+
+
+viewBenchmark : Benchmark -> Html Msg
+viewBenchmark benchmark =
+  li [] <|
+    [ text benchmark.name
+    , viewInstances benchmark.instances
+    ]
+
+
+viewInstances : List Instance -> Html Msg
+viewInstances instances =
+  ul [] <|
+    List.map viewInstance instances
+
 
 viewInstance : Instance -> Html Msg
 viewInstance instance =
-  li []
+  li [] <|
     [ text instance.name
     , text instance.state
+    , viewEvents instance.events
     ]
+
+
+viewEvents : List String -> Html Msg
+viewEvents events =
+  ul [] <|
+    List.map text events
 
 
 -- FORM VIEW

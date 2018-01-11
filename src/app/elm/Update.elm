@@ -32,6 +32,7 @@ type Msg
   | ChangeSiddhiQuery Int Int String
   | ChangeSiddhiDefinition Int String
   | StartBenchmark
+  | RefreshBenchmarks
   | Receive String
 
 
@@ -46,6 +47,7 @@ update msg model =
           , state = ""
           , engine = "Esper"
           , config = emptyEsperConfig
+          , events = []
           }
 
         change form =
@@ -494,38 +496,26 @@ update msg model =
           ! []
 
     StartBenchmark ->
-      { model | route = Main }
+      { model | route = Benchmarks }
         ! [ WebSocket.send model.server (encodeSubmitFormMessage model.form) ]
+
+    RefreshBenchmarks ->
+      model
+        ! [ WebSocket.send model.server encodeRefreshBenchmarksMessage ]
 
     Receive message ->
       case decodeMessageType message of
---          "CreateInstance" ->
---            case decodeInstance message of
---              Ok instance ->
---                model
---                  ! []
---
---              _ ->
---                model ! []
---
---          "UpdateInstance" ->
---            let
---              update decoded instance =
---                if instance.name == decoded.name then
---                  { instance | state = decoded.state }
---                else
---                  instance
---            in
---              case decodeInstance message of
---                Ok instance ->
---                  model
---                    ! []
---
---                _ ->
---                  model ! []
+        "Benchmarks" ->
+          case decodeBenchmarks message |> Debug.log "msg " of
+            Ok benchmarks ->
+              { model | benchmarks = benchmarks }
+                ! []
 
-          _ ->
-            model ! []
+            _ ->
+              model ! []
+
+        _ ->
+          model ! []
 
 
 -- HELPERS
@@ -686,6 +676,13 @@ encodeSiddhiConfig configs =
       List.map encode configs
 
 
+encodeRefreshBenchmarksMessage : String
+encodeRefreshBenchmarksMessage =
+  Encode.encode 0 << Encode.object <|
+    [ ("type", Encode.string "RefreshBenchmarks")
+    ]
+
+
 -- DECODE
 
 decodeMessageType : String -> String
@@ -694,12 +691,80 @@ decodeMessageType message =
     |> Result.withDefault ""
 
 
---decodeInstance : String -> Result String Instance
---decodeInstance message =
---  let
---    decoder =
---      Decode.map2 Instance
---        (Decode.field "name" Decode.string)
---        (Decode.field "state" Decode.string)
---  in
---    Decode.decodeString decoder message
+decodeBenchmarks : String -> Result String (List Benchmark)
+decodeBenchmarks message =
+  let
+    decodeConfig =
+      Decode.oneOf
+        [ decodeEsperConfig
+        , decodeSiddhiConfig
+        ]
+
+    decodeEsperConfig =
+      Decode.map Esper <|
+        Decode.map4 EsperConfig
+          (Decode.field "events" (Decode.list decodeEsperEvent))
+          (Decode.succeed 0)
+          (Decode.field "statements" (Decode.list decodeEsperStatement))
+          (Decode.succeed 0)
+
+    decodeEsperEvent =
+      Decode.map4 EsperEvent
+        (Decode.succeed 0)
+        (Decode.field "name" Decode.string)
+        (Decode.field "properties" (Decode.list decodeEsperEventProperty))
+        (Decode.succeed 0)
+
+    decodeEsperEventProperty =
+      Decode.map3 EsperEventProperty
+        (Decode.succeed 0)
+        (Decode.field "name" Decode.string)
+        (Decode.field "type" Decode.string)
+
+    decodeEsperStatement =
+      Decode.map3 EsperStatement
+        (Decode.succeed 0)
+        (Decode.field "name" Decode.string)
+        (Decode.field "query" Decode.string)
+
+    decodeSiddhiConfig =
+      Decode.map Siddhi <|
+        Decode.map5 SiddhiConfig
+          (Decode.field "definition" Decode.string)
+          (Decode.field "events" (Decode.list decodeSiddhiEvent))
+          (Decode.succeed 0)
+          (Decode.field "queries" (Decode.list decodeSiddhiQuery))
+          (Decode.succeed 0)
+
+    decodeSiddhiEvent =
+      Decode.map2 SiddhiEvent
+        (Decode.succeed 0)
+        Decode.string
+
+    decodeSiddhiQuery =
+      Decode.map2 SiddhiQuery
+        (Decode.succeed 0)
+        Decode.string
+
+    decodeInstance =
+      Decode.map6 Instance
+        (Decode.succeed 0)
+        (Decode.field "name" Decode.string)
+        (Decode.field "state" Decode.string)
+        (Decode.field "engine" Decode.string)
+        (Decode.field "config" decodeConfig)
+        (Decode.field "events" (Decode.list Decode.string))
+
+    decodeBenchmark =
+      Decode.map5 Benchmark
+        (Decode.field "name" Decode.string)
+        (Decode.field "broker" Decode.string)
+        (Decode.field "endEventName" Decode.string)
+        (Decode.field "instances" (Decode.list decodeInstance))
+        (Decode.succeed 0)
+
+    decoder =
+      (Decode.field "benchmarks" (Decode.list decodeBenchmark))
+
+  in
+    Decode.decodeString decoder message

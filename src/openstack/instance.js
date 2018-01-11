@@ -89,6 +89,7 @@ class Instance extends EventEmitter {
 
   changeState(state) {
     this.state = state;
+    MongoDB.updateState(this.benchmark, this.name, state);
     this.emit('changeState', state);
   }
 

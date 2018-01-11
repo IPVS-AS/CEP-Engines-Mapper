@@ -17,6 +17,26 @@ class MongoDB {
     });
   }
 
+  static findBenchmarks(callback) {
+    MongoDB.connect((err, client, db) => {
+      if (err) {
+        console.log(err);
+        return callback([]);
+      }
+
+      db.collection('benchmarks').find().toArray((err, docs) => {
+        if (err) {
+          console.log(err);
+          return callback([]);
+        }
+
+        client.close();
+
+        return callback(docs);
+      });
+    });
+  }
+
   static insertBenchmark(benchmark) {
     var instances = [];
     for (var name in benchmark.instances) {
@@ -41,6 +61,10 @@ class MongoDB {
     };
 
     MongoDB.connect((err, client, db) => {
+      if (err) {
+        console.log(err);
+      }
+
       db.collection('benchmarks').insertOne(document, (err, r) => {
         if (err) {
           console.log(err);
@@ -53,14 +77,51 @@ class MongoDB {
 
   static insertEvents(benchmark, instance, events) {
     MongoDB.connect((err, client, db) => {
+      if (err) {
+        console.log(err);
+      }
+
+      // prettier-ignore
       db.collection('benchmarks').update(
         {
           $and: [{ name: benchmark }, { 'instances.name': instance }]
         },
-        { $push: { 'instances.$.events': { $each: events } } }
-      );
+        {
+          $push: { 'instances.$.events': { $each: events } }
+        },
+        (err, r) => {
+          if (err) {
+            console.log(err);
+          }
 
-      client.close();
+          client.close();
+        }
+      );
+    });
+  }
+
+  static updateState(benchmark, instance, state) {
+    MongoDB.connect((err, client, db) => {
+      if (err) {
+        console.log(err);
+      }
+
+      // prettier-ignore
+      db.collection('benchmarks').update(
+        {
+          $and: [{ name: benchmark }, { 'instances.name': instance }]
+        },
+        {
+          $set: { 'instances.$.state': state }
+        },
+        (err, r) => {
+          if (err) {
+            console.log(err);
+          }
+
+          client.close();
+        }
+      );
     });
   }
 }

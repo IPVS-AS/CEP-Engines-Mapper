@@ -6,3 +6,5 @@ exports.BenchmarkEnd = 'BenchmarkEnd';
 exports.Shutdown = 'Shutdown';
 exports.UpdateInstance = 'UpdateInstance';
 exports.CreateInstance = 'CreateInstance';
+exports.Benchmarks = 'Benchmarks';
+exports.RefreshBenchmarks = 'RefreshBenchmarks';
