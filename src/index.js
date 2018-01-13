@@ -111,6 +111,10 @@ wss.on('connection', (ws, req) => {
     }
   });
 
+  ws.on('error', err => {
+    console.log(err);
+  });
+
   ws.on('close', (code, reason) => {
     console.log('[WebSocket] Connection closed: ' + code + ' ' + reason);
   });
