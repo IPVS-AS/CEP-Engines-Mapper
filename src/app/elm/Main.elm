@@ -28,7 +28,7 @@ init flags =
 form : Benchmark
 form =
   { name = ""
-  , mqttBroker = "tcp://10.0.14.106:1883"
+  , mqttBroker = "tcp://192.168.209.190:1883"
   , endEventName = "TemperatureEndEvent"
   , instances = []
   , instanceId = 0

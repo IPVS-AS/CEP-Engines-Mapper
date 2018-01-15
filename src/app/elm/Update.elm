@@ -506,7 +506,7 @@ update msg model =
     Receive message ->
       case decodeMessageType message of
         "Benchmarks" ->
-          case decodeBenchmarks message |> Debug.log "msg " of
+          case decodeBenchmarks message of
             Ok benchmarks ->
               { model | benchmarks = benchmarks }
                 ! []

@@ -7,7 +7,6 @@
     "ip" : "192.168.209.186",
     "port": 3000
   },
-  "mqtt": "tcp://192.168.209.190:1883",
   "mongodb": "mongodb://localhost:27017",
   "temperature_samples": 50
 }

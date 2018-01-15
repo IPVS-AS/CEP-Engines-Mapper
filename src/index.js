@@ -44,7 +44,10 @@ wss.on('listening', () => {
           });
 
           benchmark.on('ready', () => {
-            temperature.start(config.get('temperature_samples'));
+            temperature.start(
+              benchmark.broker,
+              config.get('temperature_samples')
+            );
           });
 
           MongoDB.findBenchmarks(benchmarks => {
