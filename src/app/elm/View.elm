@@ -14,23 +14,54 @@ view : Model -> Html Msg
 view model =
   case model.route of
     Benchmarks ->
-      div []
-        [ viewBenchmarks model.benchmarks
-        , button [ type_ "button", onClick RefreshBenchmarks ]
-            [ text "Refresh Benchmarks" ]
-        ]
+      frame <|
+        div [ class "content" ]
+          [ viewBenchmarks model.benchmarks
+          , button [ onClick RefreshBenchmarks ]
+              [ text "Refresh Benchmarks" ]
+          ]
 
     Form ->
-      Html.form [ class "pure-form" ]
-        [ input [ value model.form.mqttBroker, onInput ChangeBroker ] []
-        , input [ value model.form.endEventName, onInput ChangeEndEvent ] []
-        , button [ type_ "button", onClick AddInstance ]
-            [ text "Add Instance" ]
-        , viewFormInstances model.form.instances
-        , button [ type_ "button", onClick StartBenchmark ]
-            [ text "Start Benchmark" ]
-        , text (encodeSubmitFormMessage model.form)
+      frame <|
+        div [ class "content" ]
+          [ input [ value model.form.mqttBroker, onInput ChangeBroker ] []
+          , input [ value model.form.endEventName, onInput ChangeEndEvent ] []
+          , button [ onClick AddInstance ]
+              [ text "Add Instance" ]
+          , viewFormInstances model.form.instances
+          , button [ onClick StartBenchmark ]
+              [ text "Start Benchmark" ]
+          ]
+
+
+-- FRAME
+
+
+frame : Html Msg -> Html Msg
+frame content =
+  div [ class "frame" ]
+    [ header
+    , content
+    ]
+
+
+header : Html Msg
+header =
+  div [ class "header" ]
+    [ p [] [ text "CEP Benchmarking" ]
+    , div [ id "menu" ]
+        [ button
+            [ class "pure-button"
+            , onClick (ChangePage Benchmarks)
+            ]
+            [ text "Benchmarks" ]
+        , button
+            [ class "pure-button"
+            , onClick (ChangePage Form)
+            ]
+            [ text "New Benchmark" ]
         ]
+    ]
 
 
 -- BENCHMARKS VIEW
@@ -109,20 +140,20 @@ viewConfig : Int -> Config -> Html Msg
 viewConfig instanceId config =
   case config of
     Esper c ->
-      Html.form [ class "pure-form" ]
-        [ button [ type_ "button", onClick (AddEsperEvent instanceId) ]
+      div []
+        [ button [ onClick (AddEsperEvent instanceId) ]
             [ text "Add Event" ]
-        , button [ type_ "button", onClick (AddEsperStatement instanceId) ]
+        , button [ onClick (AddEsperStatement instanceId) ]
             [ text "Add Statement" ]
         , viewEsperEvents instanceId c.events
         , viewEsperStatements instanceId c.statements
         ]
 
     Siddhi c ->
-      Html.form [ class "pure-form" ]
-        [ button [ type_ "button", onClick (AddSiddhiEvent instanceId) ]
+      div []
+        [ button [ onClick (AddSiddhiEvent instanceId) ]
             [ text "Add Event" ]
-        , button [ type_ "button", onClick (AddSiddhiQuery instanceId) ]
+        , button [ onClick (AddSiddhiQuery instanceId) ]
             [ text "Add Query" ]
         , viewSiddhiEvents instanceId c.events
         , viewSiddhiQueries instanceId c.queries
@@ -147,9 +178,9 @@ viewEsperEvent instanceId event =
         , onInput (ChangeEsperEventName instanceId event.id)
         ] []
     , viewEsperEventProperties instanceId event.id event.properties
-    , button [ type_ "button", onClick (RemoveEsperEvent instanceId event.id) ]
+    , button [ onClick (RemoveEsperEvent instanceId event.id) ]
         [ text "Remove Event" ]
-    , button [ type_ "button", onClick (AddEsperEventProperty instanceId event.id) ]
+    , button [ onClick (AddEsperEventProperty instanceId event.id) ]
         [ text "Add Event Property" ]
     ]
 
@@ -222,7 +253,7 @@ viewEsperStatement instanceId statement =
             [ value statement.query
             , onInput (ChangeEsperStatementQuery instanceId statement.id)
             ] []
-        , button [ type_ "button", onClick (RemoveEsperStatement instanceId statement.id) ]
+        , button [ onClick (RemoveEsperStatement instanceId statement.id) ]
             [ text "Remove Statement" ]
         ]
     ]
@@ -241,7 +272,7 @@ viewSiddhiEvent instanceId event =
         [ value event.name
         , onInput (ChangeSiddhiEvent instanceId event.id)
         ] []
-    , button [ type_ "button", onClick (RemoveSiddhiEvent instanceId event.id) ]
+    , button [ onClick (RemoveSiddhiEvent instanceId event.id) ]
         [ text "Remove Event" ]
     ]
 
@@ -259,6 +290,6 @@ viewSiddhiQuery instanceId query =
         [ value query.name
         , onInput (ChangeSiddhiQuery instanceId query.id)
         ] []
-    , button [ type_ "button", onClick (RemoveSiddhiQuery instanceId query.id) ]
+    , button [ onClick (RemoveSiddhiQuery instanceId query.id) ]
         [ text "Remove Query" ]
     ]

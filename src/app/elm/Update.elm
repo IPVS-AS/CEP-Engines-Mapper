@@ -33,6 +33,7 @@ type Msg
   | ChangeSiddhiDefinition Int String
   | StartBenchmark
   | RefreshBenchmarks
+  | ChangePage Route
   | Receive String
 
 
@@ -502,6 +503,19 @@ update msg model =
     RefreshBenchmarks ->
       model
         ! [ WebSocket.send model.server encodeRefreshBenchmarksMessage ]
+
+    ChangePage route ->
+      case route of
+        Benchmarks ->
+          if model.route == Benchmarks then
+            model ! []
+          else
+            { model | route = Benchmarks }
+              ! [ WebSocket.send model.server encodeRefreshBenchmarksMessage ]
+
+        Form ->
+          { model | route = Form }
+            ! []
 
     Receive message ->
       case decodeMessageType message of

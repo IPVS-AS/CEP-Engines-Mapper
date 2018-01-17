@@ -1,9 +1,39 @@
-html {
-  font-family: 'Roboto', sans-serif;
+html,
+body {
+  margin: 0;
 }
 
 html,
 body,
-h1 {
-  margin: 0;
+#main {
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+}
+
+.frame {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  background-color: #03a9f4;
+  width: 100%;
+}
+
+#menu {
+  display: flex;
+}
+
+.content {
+  flex: auto;
+  position: relative;
+  overflow-y: auto;
 }
