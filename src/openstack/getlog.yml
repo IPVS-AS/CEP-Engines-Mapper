@@ -3,10 +3,10 @@
     - name: Get instance facts
       os_server_facts:
         auth:
-          auth_url: http://129.69.209.131:5000/v2.0
-          username: nahralo
-          password: 84237610
-          project_name: IoTMonitoring
+          auth_url: "{{auth_url}}"
+          username: "{{username}}"
+          password: "{{password}}"
+          project_name: "{{project_name}}"
         server: "{{instance_name}}"
       register: servers
 

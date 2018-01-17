@@ -19,6 +19,10 @@ class Instance extends EventEmitter {
 
   runPlaybook(action, success, fail) {
     var playbook = new Playbook().playbook(action).variables({
+      auth_url: config.get('openstack.auth_url'),
+      username: config.get('openstack.username'),
+      password: config.get('openstack.password'),
+      project_name: config.get('openstack.project_name'),
       benchmark_name: this.benchmark,
       instance_name: this.name,
       host_ip_address: config.get('server.ip')

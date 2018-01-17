@@ -27,6 +27,12 @@ After running the installation script `install.sh`, a new configuration file `de
 
 ```json
 {
+  "openstack": {
+    "auth_url": "http://129.69.209.131:5000/v2.0",
+    "username": "username",
+    "password": "password",
+    "project_name": "project"
+  },
   "server": {
     "ip": "192.168.209.186",
     "wss_port": 8080
@@ -40,6 +46,7 @@ After running the installation script `install.sh`, a new configuration file `de
 }
 ```
 
+- `openstack` configuration for authentication with the OpenStack cloud platform.
 - `server` ip and port used by the benchmarking instances to communicate with the benchmarking server.
 - `app` ip and port used by the front-end to communicate with the benchmarking server.
 - `mongodb` address to the running mongodb database.

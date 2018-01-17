@@ -4,10 +4,10 @@
     - name: Create OpenStack keypair
       os_keypair:
         auth:
-          auth_url: http://129.69.209.131:5000/v2.0
-          username: nahralo
-          password: 84237610
-          project_name: IoTMonitoring
+          auth_url: "{{auth_url}}"
+          username: "{{username}}"
+          password: "{{password}}"
+          project_name: "{{project_name}}"
         name: "{{instance_name}}"
       register: keypair
 
@@ -25,10 +25,10 @@
     - name: Launch OpenStack instance
       os_server:
         auth:
-          auth_url: http://129.69.209.131:5000/v2.0
-          username: nahralo
-          password: 84237610
-          project_name: IoTMonitoring
+          auth_url: "{{auth_url}}"
+          username: "{{username}}"
+          password: "{{password}}"
+          project_name: "{{project_name}}"
         name: "{{instance_name}}"
         key_name: "{{instance_name}}"
         image: ubuntu-16.04-server-cloudimg-amd64
