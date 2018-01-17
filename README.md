@@ -38,7 +38,6 @@ After running the installation script `install.sh`, a new configuration file `de
     "wss_port": 8080
   },
   "app": {
-    "ip" : "192.168.209.186",
     "port": 3000
   },
   "mongodb": "mongodb://localhost:27017",
@@ -48,7 +47,7 @@ After running the installation script `install.sh`, a new configuration file `de
 
 - `openstack` configuration for authentication with the OpenStack cloud platform.
 - `server` ip and port used by the benchmarking instances to communicate with the benchmarking server.
-- `app` ip and port used by the front-end to communicate with the benchmarking server.
+- `app.port` port used by the WebSocket server for front-end communication.
 - `mongodb` address to the running mongodb database.
 - `temperature_samples` number of random temperature samples to generate.
 

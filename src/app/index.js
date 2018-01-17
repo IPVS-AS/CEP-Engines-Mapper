@@ -18,8 +18,7 @@ class App extends EventEmitter {
         console.log(err);
       }
 
-      var server = 'ws://' + config.get('app.ip') + ':' + port;
-      var html = data.toString().replace(/data-address/, '$&="' + server + '"');
+      var html = data.toString();
 
       app.get('/', (req, res) => {
         res.send(html);
