@@ -8,7 +8,7 @@ module.exports = {
     filename: 'app.js'
   },
   resolve: {
-    extensions: ['.js', '.elm']
+    extensions: ['.js', '.elm', '.css']
   },
   module: {
     rules: [

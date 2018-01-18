@@ -1,4 +1,5 @@
 require('purecss');
+require('./static/style');
 
 var Elm = require('./elm/Main');
 
