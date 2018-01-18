@@ -4,8 +4,8 @@
   "description": "Manager for benchmarking of CEP engines.",
   "main": "src/index.js",
   "scripts": {
-    "start": "npm run build && node src/index.js",
-    "start-dev": "NODE_ENV=development node src/index.js",
+    "start": "npm run build && NODE_ENV=production node src/index.js",
+    "dev": "NODE_ENV=development node src/index.js",
     "build": "NODE_ENV=production webpack -p",
     "lint": "prettier --write --single-quote */*.js"
   },
@@ -31,6 +31,7 @@
   "devDependencies": {
     "css-loader": "^0.28.7",
     "elm": "^0.18.0",
+    "elm-hot-loader": "^0.5.4",
     "elm-webpack-loader": "^4.4.0",
     "prettier": "^1.5.3",
     "style-loader": "^0.19.0",

@@ -1,14 +1,7 @@
-'use strict';
-
 require('purecss');
 
-var Elm = require('./elm/Main.elm');
-var mount = document.getElementById('main');
+var Elm = require('./elm/Main');
 
-var app = Elm.Main.embed(mount, {
+Elm.Main.fullscreen({
   server: 'ws://' + window.location.host
 });
-
-if (module.hot) {
-  module.hot.accept();
-}

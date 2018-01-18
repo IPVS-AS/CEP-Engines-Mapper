@@ -13,16 +13,22 @@ class App extends EventEmitter {
 
     app.use('/static', express.static(__dirname + '/static'));
 
-    fs.readFile(__dirname + '/static/client.html', (err, data) => {
-      if (err) {
-        console.log(err);
-      }
+    if (process.env.NODE_ENV === 'development') {
+      var webpack = require('webpack');
+      var webpackConfig = require('../../dev.config');
+      var compiler = webpack(webpackConfig);
+      app.use(
+        require('webpack-dev-middleware')(compiler, {
+          noInfo: false,
+          publicPath: webpackConfig.output.publicPath
+        })
+      );
 
-      var html = data.toString();
+      app.use(require('webpack-hot-middleware')(compiler));
+    }
 
-      app.get('/', (req, res) => {
-        res.send(html);
-      });
+    app.get('/', (req, res) => {
+      res.sendFile(__dirname + '/static/client.html');
     });
 
     this.server = http.createServer(app);
