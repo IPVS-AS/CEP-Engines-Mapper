@@ -1,6 +1,13 @@
-html,
-body {
+* {
   margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+*,
+*:after,
+*:before {
+  box-sizing: border-box;
 }
 
 html,
@@ -11,6 +18,72 @@ body,
 
 body {
   overflow: hidden;
+}
+
+input {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+  outline: none;
+}
+
+button {
+  padding: 0 16px;
+  height: 36px;
+  min-width: 88px;
+  border-radius: 2px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  background-color: #03a9f4; /* Light Blue 500 */
+  outline: none;
+  transition: all 0.3s ease-out;
+}
+
+button:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  background-color: #039be5; /* Light Blue 600 */
+}
+
+button:active {
+  background-color: #0288d1; /* Light Blue 700 */
+}
+
+select {
+  padding: 8px 16px;
+  border-radius: 2px;
+  background-color: #ffffff;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 16px;
+}
+
+ul > * {
+  padding: 16px 0;
+}
+
+li > * {
+  padding: 8px 0;
+}
+
+li > :first-child {
+  padding-top: 0 !important;
+}
+
+li > :last-child {
+  padding-bottom: 0 !important;
+}
+
+textarea {
+  padding: 8px;
+  border-radius: 2px;
+  width: 100%;
+  min-height: 200px;
+  outline: none;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
 .frame {
@@ -24,16 +97,89 @@ body {
   align-items: center;
   justify-content: space-between;
   flex: none;
-  background-color: #03a9f4;
-  width: 100%;
+  background-color: #03a9f4; /* Ligth Blue 500 */
+}
+
+.header p {
+  color: #ffffff;
+  padding: 24px;
+}
+
+.header #title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.header .button {
+  cursor: pointer;
 }
 
 #menu {
   display: flex;
 }
 
+.menu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .content {
   flex: auto;
   position: relative;
-  overflow-y: auto;
+  overflow-y: scroll;
+  padding: 24px;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+#form > :first-child {
+  padding-top: 0 !important;
+}
+
+.field {
+  padding: 16px 0;
+}
+
+.field input {
+}
+
+#instances {
+  padding: 16px 0;
+}
+
+.config {
+  display: flex;
+  flex-direction: column;
+}
+
+.config > * {
+  padding: 8px 0;
+}
+
+.config > :first-child {
+  padding-top: 0 !important;
+}
+
+.config > :last-child {
+  padding-bottom: 0 !important;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  margin: 8px;
+}
+
+.icon:hover {
+  cursor: pointer;
 }

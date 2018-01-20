@@ -136,6 +136,10 @@ function cleanup() {
     app.close();
   }
 
+  if (Object.keys(benchmarks).length == 0) {
+    process.exit(0);
+  }
+
   for (var b in benchmarks) {
     if (benchmarks.hasOwnProperty(b)) {
       benchmarks[b].destroyAll(err => {

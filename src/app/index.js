@@ -19,7 +19,7 @@ class App extends EventEmitter {
       var compiler = webpack(webpackConfig);
       app.use(
         require('webpack-dev-middleware')(compiler, {
-          noInfo: false,
+          noInfo: true,
           publicPath: webpackConfig.output.publicPath
         })
       );
@@ -47,6 +47,10 @@ class App extends EventEmitter {
 
       ws.on('close', (code, reason) => {
         console.log('[Express] Connection closed: ' + code + ' ' + reason);
+      });
+
+      ws.on('error', err => {
+        console.log(err);
       });
     });
 
