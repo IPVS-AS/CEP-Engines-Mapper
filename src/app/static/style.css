@@ -83,6 +83,7 @@ textarea {
   width: 100%;
   min-height: 200px;
   outline: none;
+  resize: none;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12), inset 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
@@ -133,7 +134,7 @@ textarea {
   overflow-x: hidden;
 }
 
-#form {
+.page {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -142,19 +143,47 @@ textarea {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
-#form > :first-child {
+.page > * {
+  padding: 16px 0;
+}
+
+.page > :first-child {
   padding-top: 0 !important;
 }
 
+.page > :last-child {
+  padding-bottom: 0 !important;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row > * {
+  padding: 0 16px;
+  width: 25%;
+}
+
+.row > :first-child {
+  padding-left: 0 !important;
+}
+
 .field {
-  padding: 16px 0;
+  display: flex;
+  align-items: center;
 }
 
-.field input {
+.field > * {
+  padding: 0 8px;
 }
 
-#instances {
-  padding: 16px 0;
+.field > :first-child {
+  padding-left: 0 !important;
+}
+
+#list > ul > li + li {
+  border-top: 1.5px solid rgba(0, 0, 0, 0.42);
 }
 
 .config {

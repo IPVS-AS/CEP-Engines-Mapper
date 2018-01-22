@@ -20,11 +20,7 @@ view model =
   case model.route of
     Benchmarks ->
       frame <|
-        div [ class "content" ]
-          [ viewBenchmarks model.benchmarks
-          , button [ onClick RefreshBenchmarks ]
-              [ text "Refresh Benchmarks" ]
-          ]
+        div [ class "content" ] [ viewBenchmarks model.benchmarks ]
 
     Form ->
       frame <|
@@ -66,30 +62,39 @@ header =
 
 viewBenchmarks : List Benchmark -> Html Msg
 viewBenchmarks benchmarks =
-  ul [] <|
-    List.map viewBenchmark benchmarks
+  div [ class "page" ]
+    [ div []
+        [ p [] [ text "Benchmarks" ]
+        , ul [] <|
+            List.map viewBenchmark benchmarks
+        ]
+    , div []
+        [ button [ onClick RefreshBenchmarks ]
+            [ text "Refresh Benchmarks" ]
+        ]
+    ]
 
 
 viewBenchmark : Benchmark -> Html Msg
 viewBenchmark benchmark =
   li [] <|
-    [ text benchmark.name
-    , viewInstances benchmark.instances
+    [ p [] [ text benchmark.name ]
+    , div []
+        [ ul [] <|
+            List.map viewInstance benchmark.instances
+        ]
     ]
-
-
-viewInstances : List Instance -> Html Msg
-viewInstances instances =
-  ul [] <|
-    List.map viewInstance instances
 
 
 viewInstance : Instance -> Html Msg
 viewInstance instance =
   li [] <|
-    [ text instance.name
-    , text instance.state
-    , viewEvents instance.events
+    [ p [] [ text instance.name ]
+    , p [] [ text instance.state ]
+    , div []
+        [ ul [] <|
+            List.map text instance.events
+        ]
     ]
 
 
@@ -103,33 +108,35 @@ viewEvents events =
 
 viewForm : Model -> Html Msg
 viewForm model =
-  div [ id "form" ]
+  div [ class "page" ]
     [ viewFormField "MQTT broker" model.form.mqttBroker ChangeBroker
     , viewFormField "Benchmark end event" model.form.endEventName ChangeEndEvent
-    , viewFormInstances model.form.instances
-    , button [ onClick StartBenchmark ]
-        [ text "START BENCHMARK" ]
+    , div [ id "instances" ]
+        [ div [ class "row" ]
+            [ div [] [ p [] [ text "Instances" ] ]
+            , div [] [ button [ onClick AddInstance ] [ text "ADD INSTANCE" ] ]
+            ]
+        , div [ id "list" ]
+            [ ul [] <|
+                List.map viewFormInstance model.form.instances
+            ]
+        ]
+    , div []
+        [ button [ onClick StartBenchmark ]
+            [ text "START BENCHMARK" ]
+        ]
     ]
+
 
 viewFormField : String -> String -> (String -> Msg) -> Html Msg
 viewFormField name value change =
   div [ class "field" ]
-    [ p [] [ text name ]
-    , input [ Html.Attributes.value value, onInput change ] []
+    [ div [] [ p [] [ text name ] ]
+    , div []
+        [ input [ Html.Attributes.value value, onInput change ] []
+        ]
     ]
 
-viewFormInstances : List Instance -> Html Msg
-viewFormInstances instances =
-  div [ id "instances" ]
-    [ div [ class "menu" ]
-        [ p [] [ text "Instances" ]
-        , button [ onClick AddInstance ] [ text "ADD INSTANCE" ]
-        ]
-    , div [ id "list" ]
-        [ ul [] <|
-            List.map viewFormInstance instances
-        ]
-    ]
 
 viewFormInstance : Instance -> Html Msg
 viewFormInstance instance =
@@ -137,6 +144,7 @@ viewFormInstance instance =
     [ viewInstanceEngine instance.id instance.engine
     , viewConfig instance.id instance.config
     ]
+
 
 viewInstanceEngine : Int -> String -> Html Msg
 viewInstanceEngine instanceId engine =
@@ -155,11 +163,14 @@ viewInstanceEngine instanceId engine =
     decode =
       Decode.map (ChangeInstanceEngine instanceId) targetValue
   in
-    div [ class "menu" ]
-      [ p [] [ text "Engine" ]
-      , select [ attribute "value" engine, on "change" decode ] <|
-          List.map engineOption engines
+    div [ class "field" ]
+      [ div [] [ p [] [ text "Engine" ] ]
+      , div []
+          [ select [ attribute "value" engine, on "change" decode ] <|
+              List.map engineOption engines
+          ]
       ]
+
 
 viewConfig : Int -> Config -> Html Msg
 viewConfig instanceId config =
@@ -167,10 +178,12 @@ viewConfig instanceId config =
     Esper c ->
       div [ class "config" ]
         [ div []
-            [ div [ class "menu" ]
-                [ p [] [ text "Events" ]
-                , button [ onClick (AddEsperEvent instanceId) ]
-                    [ text "ADD EVENT" ]
+            [ div [ class "row" ]
+                [ div [] [ p [] [ text "Events" ] ]
+                , div []
+                    [ button [ onClick (AddEsperEvent instanceId) ]
+                        [ text "ADD EVENT" ]
+                    ]
                 ]
             , div []
                 [ ul [] <|
@@ -178,10 +191,12 @@ viewConfig instanceId config =
                 ]
             ]
         , div []
-            [ div [ class "menu" ]
-                [ p [] [ text "Statements" ]
-                , button [ onClick (AddEsperStatement instanceId) ]
-                    [ text "ADD STATEMENT" ]
+            [ div [ class "row" ]
+                [ div [] [ p [] [ text "Statements" ] ]
+                , div []
+                    [ button [ onClick (AddEsperStatement instanceId) ]
+                        [ text "ADD STATEMENT" ]
+                    ]
                 ]
             , div []
                 [ ul [] <|
@@ -193,10 +208,12 @@ viewConfig instanceId config =
     Siddhi c ->
       div [ class "config" ]
         [ div []
-            [ div [ class "menu" ]
-                [ p [] [ text "Events" ]
-                , button [ onClick (AddSiddhiEvent instanceId) ]
-                    [ text "ADD EVENT" ]
+            [ div [ class "row" ]
+                [ div [] [ p [] [ text "Events" ] ]
+                , div []
+                    [ button [ onClick (AddSiddhiEvent instanceId) ]
+                        [ text "ADD EVENT" ]
+                    ]
                 ]
             , div []
                 [ ul [] <|
@@ -204,16 +221,19 @@ viewConfig instanceId config =
                 ]
             ]
         , div []
-            [ div [ class "menu" ]
-                [ p [] [ text "Queries" ]
-                , button [ onClick (AddSiddhiQuery instanceId) ]
-                    [ text "ADD QUERY" ]
+            [ div [ class "row" ]
+                [ div [] [ p [] [ text "Queries" ] ]
+                , div []
+                    [ button [ onClick (AddSiddhiQuery instanceId) ]
+                        [ text "ADD QUERY" ]
+                    ]
                 ]
             , div []
                 [ ul [] <|
                     List.map (viewSiddhiQuery instanceId) c.queries
                 ]
             ]
+        , div [] [ p [] [ text "Definition" ] ]
         , div []
             [ textarea
                 [ value c.definition
@@ -226,17 +246,24 @@ viewConfig instanceId config =
 viewEsperEvent : Int -> EsperEvent -> Html Msg
 viewEsperEvent instanceId event =
   li []
-    [ div [ class "menu" ]
-        [ icon [ Svg.Events.onClick (RemoveEsperEvent instanceId event.id) ] Content.clear
-        , input
-            [ value event.name
-            , onInput (ChangeEsperEventName instanceId event.id)
-            ] []
+    [ div [ class "field" ]
+        [ div []
+            [ icon [ Svg.Events.onClick (RemoveEsperEvent instanceId event.id) ] Content.clear
+            ]
+        , div []
+            [ input
+                [ value event.name
+                , onInput (ChangeEsperEventName instanceId event.id)
+                , placeholder "Event name"
+                ] []
+            ]
         ]
-    , div [ class "menu" ]
-        [ p [] [ text "Properties" ]
-        , button [ onClick (AddEsperEventProperty instanceId event.id) ]
-            [ text "ADD EVENT PROPERTY" ]
+    , div [ class "row" ]
+        [ div [] [ p [] [ text "Properties" ] ]
+        , div []
+            [ button [ onClick (AddEsperEventProperty instanceId event.id) ]
+                [ text "ADD EVENT PROPERTY" ]
+            ]
         ]
     , div []
         [ ul [] <|
@@ -274,14 +301,21 @@ viewEsperEventProperty instanceId eventId property =
       Decode.map (ChangeEsperEventPropertyType instanceId eventId property.id) targetValue
   in
     li []
-      [ div [ class "menu" ]
-        [ icon [ Svg.Events.onClick (RemoveEsperEventProperty instanceId eventId property.id) ] Content.clear
-        , input
-            [ value property.name
-            , onInput (ChangeEsperEventPropertyName instanceId eventId property.id)
-            ] []
-        , select [ attribute "value" property.propType, on "change" decode ]
-            options
+      [ div [ class "field" ]
+        [ div []
+            [ icon [ Svg.Events.onClick (RemoveEsperEventProperty instanceId eventId property.id) ] Content.clear
+            ]
+        , div []
+            [ input
+                [ value property.name
+                , onInput (ChangeEsperEventPropertyName instanceId eventId property.id)
+                , placeholder "Property name"
+                ] []
+            ]
+        , div []
+            [ select [ attribute "value" property.propType, on "change" decode ]
+                options
+            ]
         ]
       ]
 
@@ -289,17 +323,23 @@ viewEsperEventProperty instanceId eventId property =
 viewEsperStatement : Int -> EsperStatement -> Html Msg
 viewEsperStatement instanceId statement =
   li []
-    [ div [ class "menu" ]
-        [ icon [ Svg.Events.onClick (RemoveEsperStatement instanceId statement.id) ] Content.clear
-        , input
-            [ value statement.name
-            , onInput (ChangeEsperStatementName instanceId statement.id)
-            ] []
+    [ div [ class "field" ]
+        [ div []
+            [ icon [ Svg.Events.onClick (RemoveEsperStatement instanceId statement.id) ] Content.clear
+            ]
+        , div []
+            [ input
+                [ value statement.name
+                , onInput (ChangeEsperStatementName instanceId statement.id)
+                , placeholder "Statement name"
+                ] []
+            ]
         ]
     , div []
         [ textarea
             [ value statement.query
             , onInput (ChangeEsperStatementQuery instanceId statement.id)
+            , placeholder "Statement query"
             ] []
         ]
     ]
@@ -308,12 +348,17 @@ viewEsperStatement instanceId statement =
 viewSiddhiEvent : Int -> SiddhiEvent -> Html Msg
 viewSiddhiEvent instanceId event =
   li []
-    [ div [ class "menu" ]
-        [ icon [ Svg.Events.onClick (RemoveSiddhiEvent instanceId event.id) ] Content.clear
-        , input
-            [ value event.name
-            , onInput (ChangeSiddhiEvent instanceId event.id)
-            ] []
+    [ div [ class "field" ]
+        [ div []
+            [ icon [ Svg.Events.onClick (RemoveSiddhiEvent instanceId event.id) ] Content.clear
+            ]
+        , div []
+            [ input
+                [ value event.name
+                , onInput (ChangeSiddhiEvent instanceId event.id)
+                , placeholder "Event name"
+                ] []
+            ]
         ]
     ]
 
@@ -321,11 +366,16 @@ viewSiddhiEvent instanceId event =
 viewSiddhiQuery : Int -> SiddhiQuery -> Html Msg
 viewSiddhiQuery instanceId query =
   li []
-    [ div [ class "menu" ]
-        [ icon [ Svg.Events.onClick (RemoveSiddhiQuery instanceId query.id) ] Content.clear
-        , input
-            [ value query.name
-            , onInput (ChangeSiddhiQuery instanceId query.id)
-            ] []
+    [ div [ class "field" ]
+        [ div []
+            [ icon [ Svg.Events.onClick (RemoveSiddhiQuery instanceId query.id) ] Content.clear
+            ]
+        , div []
+            [ input
+                [ value query.name
+                , onInput (ChangeSiddhiQuery instanceId query.id)
+                , placeholder "Query name"
+                ] []
+            ]
         ]
     ]
