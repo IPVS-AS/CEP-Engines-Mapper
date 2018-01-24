@@ -24,16 +24,20 @@ class MongoDB {
         return callback([]);
       }
 
-      db.collection('benchmarks').find().toArray((err, docs) => {
-        if (err) {
-          console.log(err);
-          return callback([]);
-        }
+      db
+        .collection('benchmarks')
+        .find()
+        .sort({ _id: -1 })
+        .toArray((err, docs) => {
+          if (err) {
+            console.log(err);
+            return callback([]);
+          }
 
-        client.close();
+          client.close();
 
-        return callback(docs);
-      });
+          return callback(docs);
+        });
     });
   }
 
