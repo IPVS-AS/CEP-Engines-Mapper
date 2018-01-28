@@ -1,6 +1,6 @@
 package com.ipvs.cepbenchmarking.engine;
 
-import java.lang.InterruptedException;
+import java.lang.Exception;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -48,8 +48,8 @@ public class Siddhi implements Engine {
 
         try {
             inputHandler.send(eventMap.values().toArray());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.fine(e.toString());
         }
     }
 

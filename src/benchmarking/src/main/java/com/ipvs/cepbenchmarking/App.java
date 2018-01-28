@@ -81,23 +81,28 @@ public class App {
         System.exit(0);
     }
 
+    private Engine newInstance(String engine, JSONObject config) {
+        try {
+            switch (engine) {
+                case Constants.Esper:
+                    return new Esper(config);
+                case Constants.Siddhi:
+                    return new Siddhi(config);
+            }
+        } catch (Exception e) {
+            LOGGER.fine(e.toString());
+        }
+
+        return null;
+    }
+
     private void setupCepEngine(
             String broker,
             String endEventName,
             String engine,
             JSONObject config) {
-        final Engine instance;
 
-        switch (engine) {
-            case Constants.Esper:
-                instance = new Esper(config);
-                break;
-            case Constants.Siddhi:
-                instance = new Siddhi(config);
-                break;
-            default:
-                instance = null;
-        }
+        final Engine instance = newInstance(engine, config);
 
         try {
             mqttClient = new Mqtt(broker);

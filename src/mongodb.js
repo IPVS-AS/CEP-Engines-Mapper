@@ -48,6 +48,7 @@ class MongoDB {
         var instance = benchmark.instances[name];
 
         instances.push({
+          timestamp: new Date(),
           name: instance.name,
           state: instance.state,
           engine: instance.engine,

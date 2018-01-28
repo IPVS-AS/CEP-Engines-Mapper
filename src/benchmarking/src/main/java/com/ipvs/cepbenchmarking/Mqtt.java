@@ -32,14 +32,12 @@ public class Mqtt extends MqttClient {
 
                         eventHandler.handleEvent(eventName, event);
                     } catch (ParseException e) {
-                        e.printStackTrace();
-                        // TODO Log exception
+                        LOGGER.fine(e.toString());
                     }
                 }
             });
         } catch (MqttException e) {
-            e.printStackTrace();
-            // TODO Log exception
+            LOGGER.fine(e.toString());
         }
     }
 

@@ -585,10 +585,10 @@ emptySiddhiConfig : Config
 emptySiddhiConfig =
   Siddhi
   { definition =
-      "define stream TemperatureEvent (temperature int);\n" ++
+      "define stream TemperatureEvent (temperature long);\n" ++
       "@info(name = 'WarningTemperature')\n" ++
-      "from TemperatureEvent\n" ++
-      "select temperature\n" ++
+      "from every temp1=TemperatureEvent, temp2=TemperatureEvent[temp1.temperature > 400 and temp2.temperature > 400]\n" ++
+      "select temp1.temperature as temp1, temp2.temperature as temp2\n" ++
       "insert into OutputStream;"
   , events = [ { id = 0, name = "TemperatureEvent" } ]
   , eventId = 1
