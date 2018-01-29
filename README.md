@@ -41,7 +41,10 @@ After running the installation script `install.sh`, a new configuration file `de
     "port": 3000
   },
   "mongodb": "mongodb://localhost:27017",
-  "temperature_samples": 50
+  "temperature_demo": {
+    "active": false,
+    "samples": 50
+  }
 }
 ```
 
@@ -49,7 +52,9 @@ After running the installation script `install.sh`, a new configuration file `de
 - `server` ip and port used by the benchmarking instances to communicate with the benchmarking server.
 - `app.port` port used by the WebSocket server for front-end communication.
 - `mongodb` address to the running mongodb database.
-- `temperature_samples` number of random temperature samples to generate.
+- `temperature_demo` demo sensor that produces random integer temperature samples.
+  - `active` toggle temperature demo on or off.
+  - `samples` number of random temperature samples to generate.
 
 ## Running
 

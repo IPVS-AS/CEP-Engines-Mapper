@@ -14,6 +14,8 @@ var benchmarks = {};
 var wss_port = config.get('server.wss_port');
 var wss = new WebSocket.Server({ port: wss_port });
 
+var temperature_demo = config.get('temperature_demo');
+
 wss.on('listening', () => {
   console.log('[WebSocketServer] Started listening on port ' + wss_port);
 
@@ -44,10 +46,9 @@ wss.on('listening', () => {
           });
 
           benchmark.on('ready', () => {
-            temperature.start(
-              benchmark.broker,
-              config.get('temperature_samples')
-            );
+            if (temperature_demo.active) {
+              temperature.start(benchmark.broker, temperature_demo.samples);
+            }
           });
 
           MongoDB.findBenchmarks(benchmarks => {
