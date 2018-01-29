@@ -1,5 +1,6 @@
 import Html exposing (..)
 import Set
+import Time
 import WebSocket
 
 import Model exposing (..)
@@ -22,6 +23,7 @@ init flags =
   { server = flags.server
   , route = Form
   , benchmarks = []
+  , refreshTimer = 0
   , selected = Set.empty
   , form = form
   }
@@ -40,4 +42,7 @@ form =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  WebSocket.listen model.server Receive
+  Sub.batch <|
+    [ WebSocket.listen model.server Receive
+    , Time.every Time.second RefreshSecond
+    ]

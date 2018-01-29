@@ -12,6 +12,7 @@ type alias Model =
   { server : String
   , route : Route
   , benchmarks : List Benchmark
+  , refreshTimer : Int
   , selected : Set String
   , form : Benchmark
   }

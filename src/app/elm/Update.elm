@@ -4,6 +4,7 @@ module Update exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Encode exposing (Value)
 import Set
+import Time exposing (Time)
 import WebSocket
 
 import Model exposing (..)
@@ -37,6 +38,7 @@ type Msg
   | StartBenchmark
   | RefreshBenchmarks
   | ChangePage Route
+  | RefreshSecond Time
   | Receive String
 
 
@@ -538,12 +540,26 @@ update msg model =
           { model | route = Form }
             ! []
 
+    RefreshSecond _ ->
+      if model.route == Benchmarks then
+        if model.refreshTimer + 1 == 30 then
+          { model | refreshTimer = 0 }
+            ! [ WebSocket.send model.server encodeRefreshBenchmarksMessage ]
+        else
+          { model | refreshTimer = model.refreshTimer + 1 }
+            ! []
+      else
+        model ! []
+
     Receive message ->
       case decodeMessageType message of
         "Benchmarks" ->
           case decodeBenchmarks message of
             Ok benchmarks ->
-              { model | benchmarks = benchmarks }
+              { model
+                  | benchmarks = benchmarks
+                  , refreshTimer = 0
+              }
                 ! []
 
             _ ->
