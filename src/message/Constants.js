@@ -8,3 +8,4 @@ exports.UpdateInstance = 'UpdateInstance';
 exports.CreateInstance = 'CreateInstance';
 exports.Benchmarks = 'Benchmarks';
 exports.RefreshBenchmarks = 'RefreshBenchmarks';
+exports.RemoveBenchmarks = 'RemoveBenchmarks';

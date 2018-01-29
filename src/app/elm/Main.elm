@@ -1,4 +1,5 @@
 import Html exposing (..)
+import Set
 import WebSocket
 
 import Model exposing (..)
@@ -21,6 +22,7 @@ init flags =
   { server = flags.server
   , route = Form
   , benchmarks = []
+  , selected = Set.empty
   , form = form
   }
     ! []

@@ -48,7 +48,6 @@ class MongoDB {
         var instance = benchmark.instances[name];
 
         instances.push({
-          timestamp: new Date(),
           name: instance.name,
           state: instance.state,
           engine: instance.engine,
@@ -59,6 +58,7 @@ class MongoDB {
     }
 
     var document = {
+      timestamp: new Date(),
       name: benchmark.name,
       broker: benchmark.broker,
       endEventName: benchmark.endEventName,
@@ -77,6 +77,24 @@ class MongoDB {
 
         client.close();
       });
+    });
+  }
+
+  static removeBenchmarks(benchmarks, callback) {
+    MongoDB.connect((err, client, db) => {
+      if (err) {
+        return callback(err);
+      }
+
+      db
+        .collection('benchmarks')
+        .remove({ name: { $in: benchmarks } }, (err, r) => {
+          if (err) {
+            return callback(err);
+          }
+
+          return callback(null, r);
+        });
     });
   }
 

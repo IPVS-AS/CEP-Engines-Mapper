@@ -70,7 +70,11 @@ viewBenchmarks benchmarks =
         ]
     , div []
         [ button [ onClick RefreshBenchmarks ]
-            [ text "Refresh Benchmarks" ]
+            [ text "REFRESH BENCHMARKS" ]
+        ]
+    , div []
+        [ button [ onClick RemoveBenchmarks ]
+            [ text "REMOVE BENCHMARKS" ]
         ]
     ]
 
@@ -78,8 +82,15 @@ viewBenchmarks benchmarks =
 viewBenchmark : Benchmark -> Html Msg
 viewBenchmark benchmark =
   li [] <|
-    [ p [] [ text benchmark.name ]
-    , div []
+    [ div [ class "field" ]
+        [ div []
+            [ input [ type_ "checkbox", onClick (ToggleBenchmark benchmark.name) ] []
+            ]
+        , div []
+            [ p [] [ text benchmark.name ]
+            ]
+        ]
+    , div [ class "list" ]
         [ ul [] <|
             List.map viewInstance benchmark.instances
         ]

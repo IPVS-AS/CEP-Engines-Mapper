@@ -3,6 +3,7 @@ module Update exposing (..)
 
 import Json.Decode as Decode
 import Json.Encode as Encode exposing (Value)
+import Set
 import WebSocket
 
 import Model exposing (..)
@@ -15,6 +16,8 @@ type Msg
   | AddEsperStatement Int
   | AddSiddhiEvent Int
   | AddSiddhiQuery Int
+  | ToggleBenchmark String
+  | RemoveBenchmarks
   | RemoveEsperEvent Int Int
   | RemoveEsperEventProperty Int Int Int
   | RemoveEsperStatement Int Int
@@ -179,6 +182,24 @@ update msg model =
       in
         changeConfig model instanceId addQuery
           ! []
+
+    ToggleBenchmark benchmark ->
+      let
+        toggle =
+          if Set.member benchmark model.selected then
+            Set.remove benchmark model.selected
+          else
+            Set.insert benchmark model.selected
+      in
+        { model | selected = toggle }
+          ! []
+
+    RemoveBenchmarks ->
+       { model | selected = Set.empty }
+          ! [ WebSocket.send model.server <|
+                encodeRemoveBenchmarksMessage <|
+                Set.toList model.selected
+            ]
 
     RemoveEsperEvent instanceId eventId ->
       let
@@ -695,6 +716,19 @@ encodeRefreshBenchmarksMessage =
   Encode.encode 0 << Encode.object <|
     [ ("type", Encode.string "RefreshBenchmarks")
     ]
+
+
+encodeRemoveBenchmarksMessage : List String -> String
+encodeRemoveBenchmarksMessage benchmarks =
+  let
+    encodeBenchmarks =
+      Encode.list <|
+        List.map Encode.string benchmarks
+  in
+    Encode.encode 0 << Encode.object <|
+      [ ("type", Encode.string "RemoveBenchmarks")
+      , ("benchmarks", encodeBenchmarks)
+      ]
 
 
 -- DECODE

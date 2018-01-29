@@ -1,5 +1,7 @@
 module Model exposing (..)
 
+import Set exposing (Set)
+
 
 type alias Flags =
   { server : String
@@ -10,6 +12,7 @@ type alias Model =
   { server : String
   , route : Route
   , benchmarks : List Benchmark
+  , selected : Set String
   , form : Benchmark
   }
 

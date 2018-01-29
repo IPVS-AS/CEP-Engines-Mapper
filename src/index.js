@@ -62,6 +62,18 @@ wss.on('listening', () => {
             ws.send(new message.BenchmarksMessage(benchmarks).toJson());
           });
           break;
+
+        case message.Constants.RemoveBenchmarks:
+          MongoDB.removeBenchmarks(msg.benchmarks, (err, r) => {
+            if (err) {
+              console.log(err);
+            } else {
+              MongoDB.findBenchmarks(benchmarks => {
+                ws.send(new message.BenchmarksMessage(benchmarks).toJson());
+              });
+            }
+          });
+          break;
       }
     } catch (err) {
       console.log(err);
