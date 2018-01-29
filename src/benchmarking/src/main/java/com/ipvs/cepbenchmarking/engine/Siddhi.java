@@ -53,12 +53,16 @@ public class Siddhi implements Engine {
         }
     }
 
-    public void addQuery(String queryName) {
+    public void addQuery(final String queryName) {
         siddhiAppRuntime.addCallback(queryName, new QueryCallback() {
             @Override
             public void receive(long timestamp, Event[] inEvents, Event[] removeEvents) {
                 for (Event event : inEvents) {
-                    LOGGER.info(event.toString().replaceFirst("Event", ""));
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("name", queryName);
+                    jsonObject.put("event", event.toString());
+
+                    LOGGER.info(jsonObject.toString());
                 }
             }
         });

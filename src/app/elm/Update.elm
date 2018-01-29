@@ -810,6 +810,12 @@ decodeBenchmarks message =
         (Decode.succeed 0)
         Decode.string
 
+    decodeEvent =
+      Decode.map3 Event
+        (Decode.field "name" Decode.string)
+        (Decode.field "event" Decode.string)
+        (Decode.field "timestamp" Decode.string)
+
     decodeInstance =
       Decode.map6 Instance
         (Decode.succeed 0)
@@ -817,7 +823,7 @@ decodeBenchmarks message =
         (Decode.field "state" Decode.string)
         (Decode.field "engine" Decode.string)
         (Decode.field "config" decodeConfig)
-        (Decode.field "events" (Decode.list Decode.string))
+        (Decode.field "events" (Decode.list decodeEvent))
 
     decodeBenchmark =
       Decode.map5 Benchmark

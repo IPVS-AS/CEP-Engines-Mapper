@@ -64,9 +64,11 @@ viewBenchmarks : List Benchmark -> Html Msg
 viewBenchmarks benchmarks =
   div [ class "page" ]
     [ div []
-        [ p [] [ text "Benchmarks" ]
-        , ul [] <|
-            List.map viewBenchmark benchmarks
+        [ div [] [ p [] [ text "Benchmarks" ] ]
+        , div [ class "list" ]
+            [ ul [] <|
+                List.map viewBenchmark benchmarks
+            ]
         ]
     , div []
         [ button [ onClick RefreshBenchmarks ]
@@ -90,7 +92,7 @@ viewBenchmark benchmark =
             [ p [] [ text benchmark.name ]
             ]
         ]
-    , div [ class "list" ]
+    , div []
         [ ul [] <|
             List.map viewInstance benchmark.instances
         ]
@@ -104,15 +106,20 @@ viewInstance instance =
     , p [] [ text instance.state ]
     , div []
         [ ul [] <|
-            List.map text instance.events
+            List.map viewEvent instance.events
         ]
     ]
 
 
-viewEvents : List String -> Html Msg
-viewEvents events =
-  ul [] <|
-    List.map text events
+viewEvent : Event -> Html Msg
+viewEvent event =
+  li [] <|
+    [ div [ class "field" ]
+        [ div [] [ p [] [ text event.name ] ]
+        , div [] [ p [] [ text event.event ] ]
+        , div [] [ p [] [ text event.timestamp ] ]
+        ]
+    ]
 
 
 -- FORM VIEW
@@ -127,7 +134,7 @@ viewForm model =
             [ div [] [ p [] [ text "Instances" ] ]
             , div [] [ button [ onClick AddInstance ] [ text "ADD INSTANCE" ] ]
             ]
-        , div [ id "list" ]
+        , div [ class "list" ]
             [ ul [] <|
                 List.map viewFormInstance model.form.instances
             ]

@@ -38,7 +38,7 @@ type alias Instance =
   , state : String
   , engine : String
   , config : Config
-  , events : List String
+  , events : List Event
   }
 
 
@@ -95,4 +95,10 @@ type alias SiddhiEvent =
 type alias SiddhiQuery =
   { id : Int
   , name : String
+  }
+
+type alias Event =
+  { name : String
+  , event : String
+  , timestamp : String
   }

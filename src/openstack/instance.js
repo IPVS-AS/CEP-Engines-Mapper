@@ -113,7 +113,15 @@ class Instance extends EventEmitter {
           return fail(err);
         }
 
-        var events = data.toString().split('\n').filter(x => x);
+        var events = data
+          .toString()
+          .split('\n')
+          .filter(e => e)
+          .map(JSON.parse)
+          .map(e => {
+            var msg = JSON.parse(e.message);
+            return { name: msg.name, event: msg.event, timestamp: e.timestamp };
+          });
 
         MongoDB.insertEvents(self.benchmark, self.name, events);
 

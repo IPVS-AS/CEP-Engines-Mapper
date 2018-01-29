@@ -11,7 +11,7 @@ import java.util.logging.SimpleFormatter;
 import com.espertech.esper.client.EPServiceProvider;
 import com.espertech.esper.client.EPServiceProviderManager;
 import com.espertech.esper.client.EPStatement;
-import com.espertech.esper.client.StatementAwareUpdateListener;
+import com.espertech.esper.client.UpdateListener;
 import com.espertech.esper.client.EventBean;
 
 import com.espertech.esper.client.EPException;
@@ -74,22 +74,17 @@ public class Esper implements Engine {
         }
     }
 
-    private void addStatement(String statementName, String eplStatement) {
+    private void addStatement(final String statementName, String eplStatement) {
         try {
             EPStatement statement = serviceProvider.getEPAdministrator().createEPL(eplStatement, statementName);
 
-            statement.addListener(new StatementAwareUpdateListener() {
-                public void update(EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement, EPServiceProvider serviceProvider) {
+            statement.addListener(new UpdateListener() {
+                public void update(EventBean[] newEvents, EventBean[] oldEvents) {
                     EventBean event = newEvents[0];
                     // TODO Make sure the type is correct
 
                     JSONObject jsonObject = new JSONObject();
-
-                    JSONObject jsonStatement = new JSONObject();
-                    jsonStatement.put("name", statement.getName());
-                    jsonStatement.put("query", statement.getText());
-
-                    jsonObject.put("statement", jsonStatement);
+                    jsonObject.put("name", statementName);
                     jsonObject.put("event", ((Map) event.getUnderlying()).toString());
 
                     LOGGER.info(jsonObject.toString());
