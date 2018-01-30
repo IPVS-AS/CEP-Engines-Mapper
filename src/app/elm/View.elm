@@ -64,7 +64,13 @@ viewBenchmarks : List Benchmark -> Html Msg
 viewBenchmarks benchmarks =
   div [ class "page" ]
     [ div []
-        [ div [] [ p [] [ text "Benchmarks" ] ]
+        [ div [ class "row" ]
+            [ div [] [ p [] [ text "Benchmarks" ] ]
+            , div []
+                [ button [ onClick RemoveBenchmarks ]
+                    [ text "REMOVE BENCHMARKS" ]
+                ]
+            ]
         , div [ class "list" ]
             [ ul [] <|
                 List.map viewBenchmark benchmarks
@@ -73,10 +79,6 @@ viewBenchmarks benchmarks =
     , div []
         [ button [ onClick RefreshBenchmarks ]
             [ text "REFRESH BENCHMARKS" ]
-        ]
-    , div []
-        [ button [ onClick RemoveBenchmarks ]
-            [ text "REMOVE BENCHMARKS" ]
         ]
     ]
 
@@ -182,7 +184,10 @@ viewInstanceEngine instanceId engine =
       Decode.map (ChangeInstanceEngine instanceId) targetValue
   in
     div [ class "field" ]
-      [ div [] [ p [] [ text "Engine" ] ]
+      [ div []
+          [ icon [ Svg.Events.onClick (RemoveInstance instanceId) ] Content.clear
+          ]
+      , div [] [ p [] [ text "Engine" ] ]
       , div []
           [ select [ attribute "value" engine, on "change" decode ] <|
               List.map engineOption engines

@@ -19,6 +19,7 @@ type Msg
   | AddSiddhiQuery Int
   | ToggleBenchmark String
   | RemoveBenchmarks
+  | RemoveInstance Int
   | RemoveEsperEvent Int Int
   | RemoveEsperEventProperty Int Int Int
   | RemoveEsperStatement Int Int
@@ -202,6 +203,20 @@ update msg model =
                 encodeRemoveBenchmarksMessage <|
                 Set.toList model.selected
             ]
+
+    RemoveInstance instanceId ->
+      let
+        removeInstance instance =
+          if instance.id == instanceId then
+            False
+          else
+            True
+
+        change form =
+          { form | instances = List.filter removeInstance form.instances }
+      in
+        { model | form = change model.form }
+          ! []
 
     RemoveEsperEvent instanceId eventId ->
       let
