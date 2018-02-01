@@ -1,5 +1,7 @@
 # CEP Benchmarking
 
+[Click here for the User Guide.](docs/USER_GUIDE.md)
+
 ## Installation
 
 Clone the repository:
