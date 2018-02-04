@@ -60,9 +60,16 @@ public class Siddhi implements Engine {
                 for (Event event : inEvents) {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("name", queryName);
-                    jsonObject.put("event", event.toString());
+                    jsonObject.put("timestamp", timestamp);
 
-                    LOGGER.info(jsonObject.toString());
+                    JSONArray jsonData = new JSONArray();
+                    for (Object data : event.getData()) {
+                        jsonData.add(data.toString());
+                    }
+
+                    jsonObject.put("data", jsonData);
+
+                    LOGGER.info(jsonObject.toJSONString());
                 }
             }
         });

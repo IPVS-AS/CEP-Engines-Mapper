@@ -828,8 +828,8 @@ decodeBenchmarks message =
     decodeEvent =
       Decode.map3 Event
         (Decode.field "name" Decode.string)
-        (Decode.field "event" Decode.string)
-        (Decode.field "timestamp" Decode.string)
+        (Decode.field "data" (Decode.map (Encode.encode 0) Decode.value))
+        (Decode.field "timestamp" Decode.int)
 
     decodeInstance =
       Decode.map6 Instance

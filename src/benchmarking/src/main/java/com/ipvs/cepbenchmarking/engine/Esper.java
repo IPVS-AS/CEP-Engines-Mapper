@@ -81,12 +81,19 @@ public class Esper implements Engine {
             statement.addListener(new UpdateListener() {
                 public void update(EventBean[] newEvents, EventBean[] oldEvents) {
                     EventBean event = newEvents[0];
-                    // TODO Make sure the type is correct
 
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("name", statementName);
-                    jsonObject.put("event", ((Map) event.getUnderlying()).toString());
+                    jsonObject.put("timestamp", System.currentTimeMillis());
 
+                    JSONArray jsonData = new JSONArray();
+                    for (Object eventMap : ((Map) event.getUnderlying()).values()) {
+                        for (Object data : ((Map) eventMap).values()) {
+                            jsonData.add(data.toString());
+                        }
+                    }
+
+                    jsonObject.put("data", jsonData);
                     LOGGER.info(jsonObject.toString());
                 }
             });
