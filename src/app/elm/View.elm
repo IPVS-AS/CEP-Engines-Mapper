@@ -119,7 +119,7 @@ viewEvent event =
     [ div [ class "field" ]
         [ div [] [ p [] [ text event.name ] ]
         , div [] [ p [] [ text event.data ] ]
-        , div [] [ p [] [ text (toString event.timestamp) ] ]
+        , div [] [ p [] [ text event.date ] ]
         ]
     ]
 

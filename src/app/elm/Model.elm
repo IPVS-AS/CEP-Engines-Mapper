@@ -99,6 +99,7 @@ type alias SiddhiQuery =
 
 type alias Event =
   { name : String
-  , data: String
+  , data : String
   , timestamp : Int
+  , date : String
   }

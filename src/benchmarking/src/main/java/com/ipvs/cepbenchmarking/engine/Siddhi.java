@@ -2,6 +2,7 @@ package com.ipvs.cepbenchmarking.engine;
 
 import java.lang.Exception;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -61,6 +62,7 @@ public class Siddhi implements Engine {
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("name", queryName);
                     jsonObject.put("timestamp", timestamp);
+                    jsonObject.put("date", dateFormat.format(new Date(timestamp)));
 
                     JSONArray jsonData = new JSONArray();
                     for (Object data : event.getData()) {

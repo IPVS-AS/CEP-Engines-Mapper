@@ -826,10 +826,11 @@ decodeBenchmarks message =
         Decode.string
 
     decodeEvent =
-      Decode.map3 Event
+      Decode.map4 Event
         (Decode.field "name" Decode.string)
         (Decode.field "data" (Decode.map (Encode.encode 0) Decode.value))
         (Decode.field "timestamp" Decode.int)
+        (Decode.field "date" Decode.string)
 
     decodeInstance =
       Decode.map6 Instance

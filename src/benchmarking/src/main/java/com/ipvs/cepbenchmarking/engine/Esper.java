@@ -1,6 +1,7 @@
 package com.ipvs.cepbenchmarking.engine;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
@@ -80,11 +81,13 @@ public class Esper implements Engine {
 
             statement.addListener(new UpdateListener() {
                 public void update(EventBean[] newEvents, EventBean[] oldEvents) {
+                    long timestamp = System.currentTimeMillis();
                     EventBean event = newEvents[0];
 
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("name", statementName);
-                    jsonObject.put("timestamp", System.currentTimeMillis());
+                    jsonObject.put("timestamp", timestamp);
+                    jsonObject.put("date", dateFormat.format(new Date(timestamp)));
 
                     JSONArray jsonData = new JSONArray();
                     for (Object eventMap : ((Map) event.getUnderlying()).values()) {
