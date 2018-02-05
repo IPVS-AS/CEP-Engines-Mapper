@@ -625,7 +625,7 @@ monitorStatement =
   , name = "MonitorTemperature"
   , query =
       "select avg(temperature) as temp\n" ++
-      "from TemperatureEvent.win:time_batch(5 sec)"
+      "from TemperatureEvent#length_batch(10)"
   }
 
 
@@ -667,7 +667,7 @@ emptySiddhiConfig =
   { definition =
       "define stream TemperatureEvent (temperature long);\n" ++
       "@info(name = 'MonitorTemperature')\n" ++
-      "from TemperatureEvent#window.timeBatch(5 sec)\n" ++
+      "from TemperatureEvent#window.lengthBatch(10)\n" ++
       "select avg(temperature) as temp\n" ++
       "insert into MonitorStream;\n" ++
       "@info(name = 'WarningTemperature')\n" ++

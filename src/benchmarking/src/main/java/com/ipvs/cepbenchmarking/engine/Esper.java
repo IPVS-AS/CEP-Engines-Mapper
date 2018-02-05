@@ -94,8 +94,8 @@ public class Esper extends Engine {
 
                     JSONArray jsonData = new JSONArray();
                     try {
-                        if (row != null) {
-                            for (Object data : row.values()) {
+                        for (Object data : row.values()) {
+                            if (data != null) {
                                 if (data instanceof Map) {
                                     for (Object select : ((Map) data).values()) {
                                         jsonData.add(select.toString());
