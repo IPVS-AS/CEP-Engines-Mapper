@@ -21,13 +21,17 @@ import com.espertech.esper.client.ConfigurationException;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
-public class Esper implements Engine {
+public class Esper extends Engine {
     private static final Logger LOGGER = Logger.getLogger(Esper.class.getName());
 
     private String[] events;
     private EPServiceProvider serviceProvider;
 
-    public Esper(JSONObject config) {
+    public Esper(ExceptionNotifier exceptionNotifier, JSONObject config) {
+        super(exceptionNotifier, config);
+    }
+
+    public void start(JSONObject config) {
         serviceProvider = EPServiceProviderManager.getDefaultProvider();
 
         JSONArray jsonArray = (JSONArray) config.get("events");
@@ -79,10 +83,9 @@ public class Esper implements Engine {
         try {
             EPStatement statement = serviceProvider.getEPAdministrator().createEPL(eplStatement, statementName);
 
-            statement.addListener(new UpdateListener() {
-                public void update(EventBean[] newEvents, EventBean[] oldEvents) {
+            statement.setSubscriber(new Subscriber() {
+                public void update(Map row) {
                     long timestamp = System.currentTimeMillis();
-                    EventBean event = newEvents[0];
 
                     JSONObject jsonObject = new JSONObject();
                     jsonObject.put("name", statementName);
@@ -90,10 +93,20 @@ public class Esper implements Engine {
                     jsonObject.put("date", dateFormat.format(new Date(timestamp)));
 
                     JSONArray jsonData = new JSONArray();
-                    for (Object eventMap : ((Map) event.getUnderlying()).values()) {
-                        for (Object data : ((Map) eventMap).values()) {
-                            jsonData.add(data.toString());
+                    try {
+                        if (row != null) {
+                            for (Object data : row.values()) {
+                                if (data instanceof Map) {
+                                    for (Object select : ((Map) data).values()) {
+                                        jsonData.add(select.toString());
+                                    }
+                                } else {
+                                    jsonData.add(data.toString());
+                                }
+                            }
                         }
+                    } catch (Exception e) {
+                        exceptionNotifier.notify(e.toString());
                     }
 
                     jsonObject.put("data", jsonData);
@@ -102,6 +115,7 @@ public class Esper implements Engine {
             });
         } catch (EPException e) {
             LOGGER.fine(e.toString());
+            exceptionNotifier.notify(e.toString());
         }
     }
 
@@ -115,5 +129,9 @@ public class Esper implements Engine {
         } catch (EPException e) {
             LOGGER.fine(e.toString());
         }
+    }
+
+    private interface Subscriber {
+        public void update(Map row);
     }
 }

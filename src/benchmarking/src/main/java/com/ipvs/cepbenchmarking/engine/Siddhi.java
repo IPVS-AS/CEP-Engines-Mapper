@@ -16,14 +16,18 @@ import org.wso2.siddhi.core.util.EventPrinter;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
-public class Siddhi implements Engine {
+public class Siddhi extends Engine {
     private static final Logger LOGGER = Logger.getLogger(Siddhi.class.getName());
 
     private SiddhiManager siddhiManager;
     private SiddhiAppRuntime siddhiAppRuntime;
     private String[] events;
 
-    public Siddhi(JSONObject config) {
+    public Siddhi(ExceptionNotifier exceptionNotifier, JSONObject config) {
+        super(exceptionNotifier, config);
+    }
+
+    public void start(JSONObject config) {
         siddhiManager = new SiddhiManager();
 
         String definition = (String) config.get("definition");

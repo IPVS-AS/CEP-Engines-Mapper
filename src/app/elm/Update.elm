@@ -605,8 +605,8 @@ emptyEsperConfig =
   Esper
   { events = [ temperatureEvent ]
   , eventId = 1
-  , statements = [ warningStatement ]
-  , statementId = 1
+  , statements = [ monitorStatement, warningStatement, criticalStatement ]
+  , statementId = 3
   }
 
 
@@ -619,18 +619,46 @@ temperatureEvent =
   }
 
 
+monitorStatement : EsperStatement
+monitorStatement =
+  { id = 0
+  , name = "MonitorTemperature"
+  , query =
+      "select avg(temperature) as temp\n" ++
+      "from TemperatureEvent.win:time_batch(5 sec)"
+  }
+
+
 warningStatement : EsperStatement
 warningStatement =
-  { id = 0
+  { id = 1
   , name = "WarningTemperature"
   , query =
       "select * from TemperatureEvent\n" ++
       "match_recognize (\n" ++
       "measures A as temp1, B as temp2\n" ++
+      "after match skip to current row\n" ++
       "pattern (A B)\n" ++
       "define\n" ++
       "A as A.temperature > 400,\n" ++
       "B as B.temperature > 400)"
+  }
+
+criticalStatement : EsperStatement
+criticalStatement =
+  { id = 2
+  , name = "CriticalTemperature"
+  , query =
+      "select * from TemperatureEvent\n" ++
+      "match_recognize (\n" ++
+      "measures A as temp1, B as temp2, C as temp3, D as temp4\n" ++
+      "after match skip to current row\n" ++
+      "pattern (A B C D)\n" ++
+      "define\n" ++
+      "A as A.temperature > 100,\n" ++
+      "B as (B.temperature > A.temperature),\n" ++
+      "C as (C.temperature > B.temperature),\n" ++
+      "D as (D.temperature > C.temperature) and D.temperature > (A.temperature * 1.5))"
   }
 
 emptySiddhiConfig : Config

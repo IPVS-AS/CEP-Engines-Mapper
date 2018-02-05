@@ -82,12 +82,18 @@ public class App {
     }
 
     private Engine newInstance(String engine, JSONObject config) {
+        Engine.ExceptionNotifier exceptionNotifier = new Engine.ExceptionNotifier() {
+            public void notify(String exception) {
+                webSocket.send(new ExceptionMessage(benchmarkName, instanceName, exception).toString());
+            }
+        };
+
         try {
             switch (engine) {
                 case Constants.Esper:
-                    return new Esper(config);
+                    return new Esper(exceptionNotifier, config);
                 case Constants.Siddhi:
-                    return new Siddhi(config);
+                    return new Siddhi(exceptionNotifier, config);
             }
         } catch (Exception e) {
             LOGGER.fine(e.toString());
