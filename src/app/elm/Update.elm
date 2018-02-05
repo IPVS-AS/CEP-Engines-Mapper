@@ -666,14 +666,33 @@ emptySiddhiConfig =
   Siddhi
   { definition =
       "define stream TemperatureEvent (temperature long);\n" ++
+      "@info(name = 'MonitorTemperature')\n" ++
+      "from TemperatureEvent#window.timeBatch(5 sec)\n" ++
+      "select avg(temperature) as temp\n" ++
+      "insert into MonitorStream;\n" ++
       "@info(name = 'WarningTemperature')\n" ++
-      "from every temp1=TemperatureEvent, temp2=TemperatureEvent[temp1.temperature > 400 and temp2.temperature > 400]\n" ++
+      "from every temp1=TemperatureEvent,\n" ++
+      "temp2=TemperatureEvent[temp1.temperature > 400 and temp2.temperature > 400]\n" ++
       "select temp1.temperature as temp1, temp2.temperature as temp2\n" ++
-      "insert into OutputStream;"
+      "insert into WarningStream;\n" ++
+      "@info(name = 'CriticalTemperature')\n" ++
+      "from every temp1=TemperatureEvent[temperature > 100],\n" ++
+      "temp2=TemperatureEvent[temperature > temp1.temperature],\n" ++
+      "temp3=TemperatureEvent[temperature > temp2.temperature],\n" ++
+      "temp4=TemperatureEvent[temperature > temp3.temperature and temperature > (temp1.temperature * 1.5)]\n" ++
+      "select temp1.temperature as temp1,\n" ++
+      "temp2.temperature as temp2,\n" ++
+      "temp3.temperature as temp3,\n" ++
+      "temp4.temperature as temp4\n" ++
+      "insert into CriticalStream;"
   , events = [ { id = 0, name = "TemperatureEvent" } ]
   , eventId = 1
-  , queries = [ { id = 0, name = "WarningTemperature" } ]
-  , queryId = 1
+  , queries =
+      [ { id = 0, name = "MonitorTemperature" }
+      , { id = 1, name = "WarningTemperature" }
+      , { id = 2, name = "CriticalTemperature" }
+      ]
+  , queryId = 3
   }
 
 

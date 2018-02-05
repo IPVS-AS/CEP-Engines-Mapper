@@ -97,6 +97,7 @@ public class App {
             }
         } catch (Exception e) {
             LOGGER.fine(e.toString());
+            webSocket.send(new ExceptionMessage(benchmarkName, instanceName, e.toString()).toString());
         }
 
         return null;
